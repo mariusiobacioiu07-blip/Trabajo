@@ -53,6 +53,7 @@ gemini-3.5-flash-lite</textarea></div>
 <div class="full"><label>Plus nocturnidad (% sobre hora normal) que fija tu convenio. Vacío = no consta</label><input id="np" type="number"></div>
 <div class="full"><label>Convenio y cláusulas del contrato (jornada, nocturnidad, horas extra, si el salario ya incluye algo)</label><textarea id="cn" rows="3"></textarea></div>
 </div><div id="hv" style="margin-top:8px"></div>
+<button id="cvs" class="s">📘 Usar datos del convenio de Sevilla 2024-2027</button>
 <button id="sb">🔎 Buscar en la ley y el convenio (hora extra y nocturnidad)</button><div id="sres"></div></div>
 
 <div class="c np"><h2>2. Añadir turno</h2>
@@ -144,20 +145,20 @@ const ctx=()=>`SITUACIÓN: la empresa solo paga las horas del contrato y no paga
 async function gem(parts,json,search){
  const k=getK();if(!k)throw new Error('Falta la clave de Gemini (⚙️ arriba).');
  const ms=$('md').value.split(/[\n,]+/).map(x=>x.trim()).filter(Boolean);if(!ms.length)throw new Error('No hay ningún modelo en la lista.');
- let err='';
+ const errs=[];
  for(const m of ms){
   try{
    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(m)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:json&&!search?{responseMimeType:'application/json'}:{},...(search?{tools:[{google_search:{}}]}:{})})});
    const j=await r.json().catch(()=>({}));
    if(r.status===401||r.status===403||(r.status===400&&/api key/i.test((j.error&&j.error.message)||''))){throw Object.assign(new Error('La clave de Gemini no es válida o no tiene permiso.'),{stop:1})}
-   if(!r.ok){err=m+': '+((j.error&&j.error.message)||r.status);continue}
+   if(!r.ok){errs.push(m+': '+String((j.error&&j.error.message)||r.status).slice(0,90));continue}
    const t=(((j.candidates||[])[0]||{}).content||{}).parts;
-   if(!t){err=m+': sin respuesta';continue}
+   if(!t){errs.push(m+': sin respuesta');continue}
    if(search)window._src=(((j.candidates[0]||{}).groundingMetadata||{}).groundingChunks||[]).map(c=>c.web&&c.web.uri).filter(Boolean);
    return t.map(p=>p.text||'').join('')
-  }catch(e){if(e.stop)throw e;err=m+': '+e.message}
+  }catch(e){if(e.stop)throw e;errs.push(m+': '+String(e.message).slice(0,90))}
  }
- throw new Error('Ningún modelo ha funcionado. Último error: '+err)
+ throw new Error('Ningún modelo ha funcionado:\n'+errs.join('\n')+(errs.some(x=>/quota|429/i.test(x))?'\n\nHas superado la cuota de Gemini (suele ser el límite gratuito; la búsqueda con Google gasta más). Espera un rato o hasta mañana, o activa la facturación en Google AI Studio.':''))
 }
 const keyUI=()=>{$('aks2').textContent=getK()?'✅ Clave guardada en este navegador.':'Sin clave guardada.'};keyUI();
 $('aks').onclick=()=>{const v=$('ak').value.trim();if(!v)return;try{localStorage.setItem('rj_k',v)}catch(e){}$('ak').value='';keyUI()};
@@ -191,6 +192,12 @@ $('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.text
   st.innerHTML=o}
  catch(e){st.textContent='No se pudo leer: '+e.message}};
 
+$('cvs').onclick=()=>{
+ const t='CONVENIO PROVINCIAL TRANSPORTE DE MERCANCÍAS POR CARRETERA DE SEVILLA 2024-2027 (BOP): jornada 40 h/semana, máx. 8 h/día, 12 h de descanso entre jornadas (art. 7.1). Horas trabajadas de 22:00 a 6:00: aumento del 27% sobre la prorrata horaria del salario base, promoción económica y complemento de asistencia (art. 7.3). Personal de movimiento: tiempo de presencia (expectativas de viaje, viajes sin conducir, averías sin intervenir, esperas de carga/descarga sin participar) máx. 2 h/día y 10 h/semana, y no es trabajo efectivo (art. 7.5). Horas extra: se compensan con descanso o se pagan al valor de la hora ordinaria, con la fórmula del art. 8 sobre una jornada anual que parece ser de 1.800 h (verificar en el BOP).';
+ const set=(id,v)=>{$(id).value=v;S[id]=String(v)};
+ set('pv','Sevilla');set('wk',40);set('dy',8);set('ah',1800);set('np',27);
+ if(!(S.cn||'').includes('SEVILLA 2024-2027'))set('cn',(S.cn?S.cn+'\n\n':'')+t);
+ sv();render();$('sres').innerHTML='<div class="ok">Rellenado: 40 h/semana, 8 h/día, 1.800 h anuales y nocturnidad 27%. Verifica las 1.800 h y la fórmula de la hora extra en el artículo 8 del BOP.</div>'};
 $('sb').onclick=async()=>{const r=$('sres');
  if(!S.pv){r.innerHTML='<span class="bad">Escribe primero la provincia donde trabajas (el convenio es provincial).</span>';return}
  r.innerHTML='<div class="ai">Buscando en la ley y el convenio…</div>';
@@ -202,7 +209,7 @@ $('sb').onclick=async()=>{const r=$('sres');
   sv();render();
   const src=(window._src||[]).slice(0,5).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.replace(/^https?:\/\//,'').slice(0,60))+'</a>').join('<br>');
   r.innerHTML='<div class="ai">'+esc(t)+'</div>'+(src?'<div class="m">Fuentes:<br>'+src+'</div>':'')+'<div class="m">Compruébalo con la tabla oficial. Si algo no coincide, corrige el campo a mano.</div>'}
- catch(e){r.innerHTML='<span class="bad">No se pudo buscar: '+esc(e.message)+'</span>'}};
+ catch(e){r.innerHTML='<span class="bad" style="white-space:pre-wrap">No se pudo buscar: '+esc(e.message)+'</span>'}};
 function turnLocal(r){let t=`${h(r.w)} trabajadas`;
  if(r.over)t+=`. Horas de más sobre tu jornada diaria: <b>${h(r.over)}</b>${D.ex?` → te corresponden ≈ <b>${eur(r.over/60*D.ex)}</b>`:' (pon tu salario para ver los euros)'}`;
  else t+='. No has pasado de tu jornada diaria';
