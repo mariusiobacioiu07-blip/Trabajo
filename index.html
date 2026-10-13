@@ -17,7 +17,9 @@ button.s{background:var(--bd);color:var(--tx)}button.x{background:none;color:var
 .ai{white-space:pre-wrap;margin-top:8px;padding:10px;border-left:3px solid var(--ac);background:var(--bg);border-radius:6px}
 details summary{font-weight:700;cursor:pointer}
 @media print{.np{display:none!important}body{background:#fff;color:#000}.c{border:0}}
-</style></head><body>
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head><body>
 <h1>🚚 Mi registro de jornada</h1>
 <div class="c m">Apunta cada día tus horas reales y las que la empresa te reconoce. Todo se guarda solo en este navegador (haz copia de seguridad abajo). Es una herramienta de apoyo, no asesoramiento legal.</div>
 
@@ -74,10 +76,12 @@ gemini-3.5-flash-lite</textarea></div>
 <div id="tot"></div>
 <h2 style="margin-top:12px">Por semana</h2><div class="sc" id="wkt"></div>
 <h2 style="margin-top:12px">Por mes</h2><div class="sc" id="mot"></div>
-<div class="np"><button id="pr">Imprimir / PDF</button></div></div>
+<div class="np"><button id="pr">📄 PDF de todo el registro</button></div></div>
 
 <div class="c"><h2>4. Informe con IA</h2>
-<div class="np"><label>Mes</label><input id="rm" type="month"><button id="rb">Generar informe del mes</button></div>
+<div class="np"><label>Mes</label><input id="rm" type="month"><button id="rb">Generar informe del mes</button>
+<button id="pm">📄 PDF del mes</button><button class="s" id="tm">Texto del mes</button>
+<div class="m">El PDF incluye lo que apuntaste tú, lo que apunta la empresa, la diferencia, los km, los euros estimados y el informe de la IA si ya lo generaste. Se abre con el menú de compartir: elige «Guardar en Archivos».</div></div>
 <div id="rep" class="ai" hidden></div></div>
 
 <div class="c np"><h2>5. Turnos</h2><div class="sc" id="lst"></div></div>
@@ -231,7 +235,7 @@ $('rb').onclick=async()=>{const m=$('rm').value,out=$('rep');out.hidden=false;
  const ws=Object.values(D.W).filter(o=>o.k.slice(0,7)===m);
  const data={dias:rows.map(r=>({fecha:r.d,real:r.s+'-'+r.e,pausaMin:r.b,horas:h(r.w),nocturnas:h(r.nt),empresa:r.cs?r.cs+'-'+r.ce:null,horasReconocidas:r.paid!==null?h(r.paid):null,km:r.k,avisos:r.al})),semanas:ws.map(o=>({lunes:o.k,horas:h(o.w),extra:h(o.extra),nocturnas:h(o.nt),mayorDescansoSeguido:h(o.rest),eurosExtraCalculados:+o.eE.toFixed(2),eurosNocturnoCalculados:+o.eN.toFixed(2)}))};
  out.textContent='Generando informe…';
- try{out.textContent=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 0) TOTAL QUE SE LE DEBERÍA (horas extra × precio + nocturnidad si procede, con el desglose y qué cifras son estimación). 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}])}
+ try{const rt0=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 0) TOTAL QUE SE LE DEBERÍA (horas extra × precio + nocturnidad si procede, con el desglose y qué cifras son estimación). 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}]);out.textContent=rt0;window._rep={m,t:rt0}}
  catch(e){out.textContent='IA: '+e.message}};
 
 /* ---------- copia y exportar ---------- */
@@ -241,6 +245,51 @@ $('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text(
 $('cp').onclick=async()=>{let t='Fecha;Inicio;Fin;Pausa min;Horas;Nocturnas;Inicio empresa;Fin empresa;Km;Notas\n';D.rows.forEach(r=>t+=[r.d,r.s,r.e,r.b,h(r.w),h(r.nt),r.cs||'',r.ce||'',r.k,(r.n||'').replace(/[\n;]/g,' ')].join(';')+'\n');
  try{await navigator.clipboard.writeText(t);alert('Copiado.')}catch(e){prompt('Copia este texto:',t)}};
 $('dall').onclick=()=>{if(E.length&&confirm('¿Borrar TODOS los turnos? No se puede deshacer.')){E=[];sv();$('dm').innerHTML='';render()}};
-$('pr').onclick=()=>window.print();
+
+const lat=s=>String(s==null?'':s).replace(/€/g,' EUR').replace(/≈/g,'aprox. ').replace(/[→⇒]/g,'->').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[–—]/g,'-').replace(/[^\x09\x0A\x20-\x7E\u00A0-\u00FF]/g,'');
+async function deliver(blob,name){
+ const f=new File([blob],name,{type:blob.type});
+ try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove()}
+function repData(m){
+ const rows=D.rows.filter(r=>!m||r.d.slice(0,7)===m),ws=Object.values(D.W).filter(o=>!m||o.k.slice(0,7)===m).sort((a,b)=>a.k<b.k?-1:1);
+ const t={d:rows.length,w:0,nt:0,km:0,un:0,hp:0,ex:0,eE:0,eN:0};
+ rows.forEach(r=>{t.w+=r.w;t.nt+=r.nt;t.km+=r.k;if(r.paid!==null){t.hp+=1;t.un+=r.w-r.paid}});
+ ws.forEach(o=>{t.ex+=o.extra;t.eE+=o.eE;t.eN+=o.eN});
+ return{rows,ws,t,label:m?m.slice(5)+'/'+m.slice(0,4):'todos los meses'}}
+function contractLines(){const L=['Contrato: '+(S.wk||40)+' h/semana, '+(S.dy||8)+' h/dia'+(S.pv?'. Provincia: '+S.pv:'')+(S.ct?'. Categoria: '+S.ct:'')];
+ if(D.mo)L.push('Salario base + pagas prorrateadas: '+D.mo.toFixed(2)+' EUR/mes. Hora normal: '+D.rt.toFixed(2)+' EUR (sobre '+Math.round(D.ah)+' h anuales). Hora extra: '+D.ex.toFixed(2)+' EUR'+(D.np?'. Plus nocturno: '+(D.np*100)+'% sobre la hora normal':''));
+ return L.map(lat)}
+async function makePDF(m){
+ if(!window.jspdf||!window.jspdf.jsPDF){alert('No se pudo cargar el generador de PDF (¿sin internet?). Prueba con «Texto del mes».');return}
+ const d=repData(m);if(!d.rows.length){alert('No hay turnos en ese periodo.');return}
+ const doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});let y=44;
+ const line=(txt,sz,b)=>{doc.setFontSize(sz||10);doc.setFont('helvetica',b?'bold':'normal');for(const l of doc.splitTextToSize(lat(txt),515)){if(y>790){doc.addPage();y=44}doc.text(l,40,y);y+=(sz||10)+3}};
+ line('Registro de jornada - '+d.label,16,1);y+=4;
+ line('Generado el '+new Date().toLocaleDateString('es-ES')+'. Datos apuntados por el trabajador.',9);y+=6;
+ contractLines().forEach(l=>line(l,10));y+=6;
+ line('RESUMEN',12,1);
+ line('Dias trabajados: '+d.t.d+'. Horas trabajadas: '+h(d.t.w)+'. Horas extra: '+h(d.t.ex)+'. Horas nocturnas (22:00-6:00): '+h(d.t.nt)+'. Kilometros: '+d.t.km+'.',10);
+ if(d.t.hp)line('Horas trabajadas que la empresa no reconoce (segun su registro): '+h(d.t.un)+'.',10);
+ if(D.mo)line('Importe estimado que correspondería: horas extra '+eur(d.t.eE)+' + nocturnidad '+eur(d.t.eN)+' = '+eur(d.t.eE+d.t.eN)+' (estimacion orientativa, sujeta a revision del convenio).',10,1);
+ y+=6;
+ doc.autoTable({startY:y,theme:'grid',styles:{fontSize:8,font:'helvetica'},headStyles:{fillColor:[29,95,209]},head:[['Semana (lunes)','Dias','Trabajadas','Extra','Nocturnas','No reconoc.','Km','EUR extra','EUR noct.','Avisos']],body:d.ws.map(o=>[fd(o.k),o.days,h(o.w),h(o.extra),h(o.nt),o.hp?h(o.un):'-',o.km,o.eE?o.eE.toFixed(2):'-',o.eN?o.eN.toFixed(2):'-',lat(o.al.join(', '))])});
+ y=doc.lastAutoTable.finalY+14;
+ doc.autoTable({startY:y,theme:'grid',styles:{fontSize:7.5,font:'helvetica'},headStyles:{fillColor:[29,95,209]},head:[['Fecha','Real (mi registro)','Pausa','Horas','Noct.','Empresa (su registro)','Horas empresa','Diferencia','Km','Notas / avisos']],body:d.rows.map(r=>[r.d.slice(8)+'/'+r.d.slice(5,7)+'/'+r.d.slice(0,4),r.s+'-'+r.e,r.b+' min',h(r.w),r.nt?h(r.nt):'-',r.cs?r.cs+'-'+r.ce:'-',r.paid!==null?h(r.paid):'-',r.paid!==null?h(r.w-r.paid):'-',r.k,lat([r.n,r.al.join(', ')].filter(Boolean).join(' | '))])});
+ y=doc.lastAutoTable.finalY+16;
+ if(window._rep&&(window._rep.m===m||!m)&&window._rep.t){line('INFORME DE LA IA ('+window._rep.m.slice(5)+'/'+window._rep.m.slice(0,4)+')',12,1);window._rep.t.split('\n').forEach(l=>line(l||' ',9))}
+ else line('Informe de la IA: no generado para este periodo.',9);
+ y+=8;line('Documento orientativo elaborado con registros propios del trabajador (incluidas capturas de la aplicacion de fichaje de la empresa). No es asesoramiento juridico: revisar con un sindicato o abogado laboralista.',8);
+ await deliver(doc.output('blob'),'informe-jornada-'+(m||'completo')+'.pdf')}
+async function makeTXT(m){
+ const d=repData(m);if(!d.rows.length){alert('No hay turnos en ese periodo.');return}
+ let t='REGISTRO DE JORNADA - '+d.label+'\n'+contractLines().join('\n')+'\n\nRESUMEN\nDias: '+d.t.d+' | Horas: '+h(d.t.w)+' | Extra: '+h(d.t.ex)+' | Nocturnas: '+h(d.t.nt)+' | Km: '+d.t.km+(d.t.hp?' | No reconocidas: '+h(d.t.un):'')+(D.mo?'\nEstimado: extras '+eur(d.t.eE)+' + nocturnidad '+eur(d.t.eN)+' = '+eur(d.t.eE+d.t.eN):'')+'\n\nTURNOS\n';
+ d.rows.forEach(r=>t+=[r.d,'real '+r.s+'-'+r.e,'pausa '+r.b+'min',h(r.w),'noct '+h(r.nt),'empresa '+(r.cs?r.cs+'-'+r.ce:'-'),r.paid!==null?'dif '+h(r.w-r.paid):'','km '+r.k,r.n||''].join(' | ')+'\n');
+ if(window._rep&&(window._rep.m===m||!m))t+='\nINFORME IA\n'+window._rep.t+'\n';
+ await deliver(new Blob([t],{type:'text/plain'}),'informe-jornada-'+(m||'completo')+'.txt')}
+$('pr').onclick=()=>makePDF('');
+$('pm').onclick=()=>makePDF($('rm').value);
+$('tm').onclick=()=>makeTXT($('rm').value);
+
 render();
 </script></body></html>
