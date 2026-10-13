@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi registro de jornada</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#667;--bd:#dde1e6;--ac:#1d5fd1;--bad:#c62828;--ok:#2e7d32}
+@media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1e2328;--tx:#e8eaed;--mut:#9aa;--bd:#333a42;--ac:#6ea0ff;--bad:#ff7b72;--ok:#6fcf7a}}
+*{box-sizing:border-box}body{margin:0 auto;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;padding:12px;max-width:760px}
+h1{font-size:1.3rem;margin:4px 0 10px}h2{font-size:1.05rem;margin:0 0 8px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.full{grid-column:1/-1}label{font-size:.78rem;color:var(--mut);display:block}
+input,textarea{width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+button{padding:10px 14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font:inherit;font-weight:600;margin:8px 6px 0 0}
+button.s{background:var(--bd);color:var(--tx)}button.x{background:none;color:var(--bad);padding:2px 6px;margin:0}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.85rem}th,td{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+.bad{color:var(--bad);font-weight:600}.ok{color:var(--ok)}.m{color:var(--mut);font-size:.8rem}.big{font-size:1.4rem;font-weight:700}
+.ai{white-space:pre-wrap;margin-top:8px;padding:10px;border-left:3px solid var(--ac);background:var(--bg);border-radius:6px}
+details summary{font-weight:700;cursor:pointer}
+@media print{.np{display:none!important}body{background:#fff;color:#000}.c{border:0}}
+</style></head><body>
+<h1>🚚 Mi registro de jornada</h1>
+<div class="c m">Apunta cada día tus horas reales y las que la empresa te reconoce. Todo se guarda solo en este navegador (haz copia de seguridad abajo). Es una herramienta de apoyo, no asesoramiento legal.</div>
+
+<details class="c np"><summary>⚙️ IA (Gemini) y lectura del contrato</summary>
+<div class="g" style="margin-top:8px">
+<div class="full"><label>Clave API de Gemini (se guarda solo en este navegador; nunca la pongas en el código ni la subas a GitHub)</label><input id="ak" type="password" autocomplete="off" placeholder="pega aquí tu clave"></div>
+<div class="full"><label>Modelos de Gemini, uno por línea, por orden. Si uno falla, prueba el siguiente</label><textarea id="md" rows="6">gemini-3.8-flash
+gemini-3.5-flash
+gemini-flash-latest
+gemini-3-flash-preview
+gemini-2.5-flash
+gemini-3.5-flash-lite</textarea></div>
+</div>
+<button id="aks">Guardar clave</button><button class="s" id="akd">Borrar clave</button>
+<div id="aks2" class="m"></div>
+<hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
+<label>Contrato (PDF o foto)</label><input id="cf" type="file" accept="application/pdf,image/*">
+<button id="cr">Leer contrato con IA</button><div id="cst" class="m"></div>
+<div class="m" style="margin-top:6px">Al usar la IA, el contrato y tus turnos se envían a Google. Revisa siempre los datos que rellena.</div>
+</details>
+
+<div class="c np"><h2>1. Mi contrato y mi sueldo</h2>
+<div class="g">
+<div><label>Horas semanales contrato</label><input id="wk" type="number" step="0.5" value="40"></div>
+<div><label>Horas diarias contrato</label><input id="dy" type="number" step="0.5" value="8"></div>
+<div><label>Salario base mensual bruto (€, 30 días)</label><input id="bs" type="number" step="0.01"></div>
+<div><label>Pagas prorrateadas mensuales (€)</label><input id="pp" type="number" step="0.01"></div>
+<div class="full"><label>Horas anuales del convenio (vacío = semanales × 52,14)</label><input id="ah" type="number"></div>
+<div class="full"><label>Precio hora extra (€) del convenio. Vacío = valor de la hora normal (mínimo legal)</label><input id="ex" type="number" step="0.01"></div>
+<div class="full"><label>Plus nocturnidad (% sobre hora normal) que fija tu convenio. Vacío = no consta</label><input id="np" type="number"></div>
+<div class="full"><label>Convenio y cláusulas del contrato (jornada, nocturnidad, horas extra, si el salario ya incluye algo)</label><textarea id="cn" rows="3"></textarea></div>
+</div><div id="hv" style="margin-top:8px"></div></div>
+
+<div class="c np"><h2>2. Añadir turno</h2>
+<div class="g">
+<div class="full"><label>Fecha</label><input id="d" type="date"></div>
+<div><label>Inicio (mi hora real)</label><input id="s" type="time"></div>
+<div><label>Fin (mi hora real)</label><input id="e" type="time"></div>
+<div><label>Pausa/descanso (min)</label><input id="b" type="number" value="0"></div>
+<div><label>Kilómetros</label><input id="k" type="number"></div>
+<div><label>Inicio según empresa</label><input id="cs" type="time"></div>
+<div><label>Fin según empresa</label><input id="ce" type="time"></div>
+<div class="full"><label>Notas (esperas, cargas, ¿foto de la app hecha?…)</label><textarea id="n" rows="2"></textarea></div>
+</div>
+<button id="add">Guardar turno</button>
+<div id="dm"></div></div>
+
+<div class="c"><h2>3. Resumen</h2>
+<div id="tot"></div>
+<h2 style="margin-top:12px">Por semana</h2><div class="sc" id="wkt"></div>
+<h2 style="margin-top:12px">Por mes</h2><div class="sc" id="mot"></div>
+<div class="np"><button id="pr">Imprimir / PDF</button></div></div>
+
+<div class="c"><h2>4. Informe con IA</h2>
+<div class="np"><label>Mes</label><input id="rm" type="month"><button id="rb">Generar informe del mes</button></div>
+<div id="rep" class="ai" hidden></div></div>
+
+<div class="c np"><h2>5. Turnos</h2><div class="sc" id="lst"></div></div>
+
+<div class="c np"><h2>6. Copia de seguridad</h2>
+<button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="cp">Copiar CSV</button>
+<input id="imf" type="file" accept=".json" hidden></div>
+
+<div class="c m"><b>Referencia (Estatuto de los Trabajadores; verifica con tu convenio):</b> jornada diaria ordinaria máx. 9 h salvo pacto (art. 34.3); 12 h de descanso entre jornadas (34.3); pausa de 15 min si pasas de 6 h (34.4); registro diario de jornada, que la empresa conserva 4 años (34.9). Horas extra: se pagan al menos como la hora normal o se compensan con descanso en 4 meses, máx. 80 al año (art. 35). Nocturnidad: de 22:00 a 6:00; es trabajador nocturno quien hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya se fijara contando la nocturnidad (art. 36). Descanso semanal: 1,5 días seguidos (art. 37). Las reclamaciones de cantidades prescriben en general al año (art. 59). El transporte por carretera tiene reglas especiales (RD 1561/1995 y convenio), por ejemplo en tiempos de espera o presencia: consúltalo con un sindicato o abogado laboralista.</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let S={},E=[],D={};
+try{S=JSON.parse(localStorage.getItem('rj_s')||'{}');E=JSON.parse(localStorage.getItem('rj_e')||'[]')}catch(e){}
+const getK=()=>{try{return localStorage.getItem('rj_k')||''}catch(e){return ''}};
+const sv=()=>{try{localStorage.setItem('rj_s',JSON.stringify(S));localStorage.setItem('rj_e',JSON.stringify(E))}catch(e){alert('Este navegador no deja guardar datos.')}};
+['wk','dy','bs','pp','ah','ex','np','cn'].forEach(f=>{if(S[f]!==undefined)$(f).value=S[f];$(f).oninput=()=>{S[f]=$(f).value;sv();render()}});
+if(S.md)$('md').value=S.md;$('md').oninput=()=>{S.md=$('md').value;sv()};
+$('d').value=new Date().toISOString().slice(0,10);$('rm').value=$('d').value.slice(0,7);
+const tm=t=>{const[a,b]=t.split(':');return +a*60+ +b};
+const dur=(s,e)=>{let a=tm(s),z=tm(e);if(z<=a)z+=1440;return[a,z]};
+const night=(a,z)=>{let t=0;for(const[x,y]of[[0,360],[1320,1800],[2760,3240]])t+=Math.max(0,Math.min(z,y)-Math.max(a,x));return t};
+const h=m=>{const s=m<0?'-':'';m=Math.abs(Math.round(m));return s+Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m'};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fd=d=>d.slice(8)+'/'+d.slice(5,7);
+const mon=d=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()-(t.getUTCDay()+6)%7);return t.toISOString().slice(0,10)};
+const abs=(d,m)=>Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10))/60000+m;
+const eur=x=>x.toFixed(2)+' €';
+
+function calc(){
+ const dayM=(+S.dy||8)*60,wkM=(+S.wk||40)*60,mo=(+S.bs||0)+(+S.pp||0),ah=+S.ah||(+S.wk||40)*52.14,rt=mo?mo*12/ah:0,ex=+S.ex||rt,np=(+S.np||0)/100;
+ E.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:tm(a.s)-tm(b.s));
+ let pe=null;
+ const rows=E.map(x=>{const[a,z]=dur(x.s,x.e);const w=z-a-x.b,nt=night(a,z);let paid=null;
+  if(x.cs&&x.ce){const[c,y]=dur(x.cs,x.ce);paid=y-c-x.b}
+  const st=abs(x.d,a),en=abs(x.d,z),rest=pe===null?null:st-pe;pe=en;
+  const al=[];if(w>540)al.push('más de 9 h');if(rest!==null&&rest<720)al.push('descanso '+h(rest));if(w>360&&x.b<15)al.push('sin pausa de 15 min');if(paid!==null&&w-paid>0)al.push(h(w-paid)+' no reconocidas');
+  return{...x,w,nt,paid,st,en,rest,over:Math.max(0,w-dayM),al}});
+ const W={};
+ rows.forEach(r=>{const k=mon(r.d),o=W[k]=W[k]||{k,w:0,nt:0,km:0,paid:0,hp:0,days:0,pts:[]};o.w+=r.w;o.nt+=r.nt;o.km+=r.k;o.days++;o.pts.push([r.st,r.en]);if(r.paid!==null){o.paid+=r.paid;o.hp+=r.w}});
+ Object.values(W).forEach(o=>{const M=abs(o.k,0),p=[[M,M],...o.pts,[M+10080,M+10080]];let g=0;for(let i=1;i<p.length;i++)g=Math.max(g,p[i][0]-p[i-1][1]);
+  o.rest=g;o.extra=Math.max(0,o.w-wkM);o.un=o.hp-o.paid;o.eE=o.extra/60*ex;o.eN=o.nt/60*rt*np;
+  o.al=[];if(o.w>2880)o.al.push('más de 48 h');if(o.rest<2160)o.al.push('sin 1,5 días de descanso')});
+ D={rows,W,rt,ex,np,mo,ah,dayM,wkM};
+}
+
+function render(){
+ calc();const{rows,W,rt,ex,np,mo,ah}=D;
+ $('hv').innerHTML=mo?`<span class="m">${eur(mo)}/mes ×12 ÷ ${Math.round(ah)} h = </span><b>${rt.toFixed(2)} €/hora normal</b> · hora extra ${ex.toFixed(2)} €${np?` · plus nocturno ${(rt*np).toFixed(2)} €/h`:''}`:'<span class="m">Pon salario base y pagas prorrateadas para calcular lo que te corresponde.</span>';
+ const ws=Object.values(W).sort((a,b)=>a.k<b.k?-1:1);
+ let tE=0,tN=0,tU=0,tEE=0,tNN=0,yr=0;const cy=new Date().getFullYear()+'';
+ ws.forEach(o=>{tE+=o.extra;tN+=o.nt;tU+=o.hp?o.un:0;tEE+=o.eE;tNN+=o.eN;if(o.k.slice(0,4)===cy)yr+=o.extra});
+ $('wkt').innerHTML=ws.length?`<table><tr><th>Semana</th><th>Trabajadas</th><th>Extra</th><th>Nocturnas</th><th>No reconoc.</th><th>Km</th><th>€ extra</th><th>€ noct.</th><th>Avisos</th></tr>${ws.map(o=>`<tr><td>${fd(o.k)}</td><td>${h(o.w)}</td><td class="${o.extra?'bad':''}">${h(o.extra)}</td><td>${h(o.nt)}</td><td class="${o.hp&&o.un>0?'bad':''}">${o.hp?h(o.un):'–'}</td><td>${o.km}</td><td>${o.eE?eur(o.eE):'–'}</td><td>${o.eN?eur(o.eN):'–'}</td><td class="bad">${o.al.join(', ')}</td></tr>`).join('')}</table>`:'<span class="m">Aún no hay turnos.</span>';
+ const M={};rows.forEach(r=>{const k=r.d.slice(0,7),o=M[k]=M[k]||{w:0,nt:0,km:0,hp:0,paid:0,ex:0,eE:0,eN:0};o.w+=r.w;o.nt+=r.nt;o.km+=r.k;if(r.paid!==null){o.hp+=r.w;o.paid+=r.paid}});
+ ws.forEach(o=>{const x=M[o.k.slice(0,7)];if(x){x.ex+=o.extra;x.eE+=o.eE;x.eN+=o.eN}});
+ $('mot').innerHTML=ws.length?`<table><tr><th>Mes</th><th>Trabajadas</th><th>Extra</th><th>Nocturnas</th><th>No reconoc.</th><th>Km</th><th>€ extra</th><th>€ noct.</th><th>Total €</th></tr>${Object.keys(M).sort().map(k=>{const o=M[k];return`<tr><td>${k.slice(5)}/${k.slice(0,4)}</td><td>${h(o.w)}</td><td>${h(o.ex)}</td><td>${h(o.nt)}</td><td>${o.hp?h(o.hp-o.paid):'–'}</td><td>${o.km}</td><td>${o.eE?eur(o.eE):'–'}</td><td>${o.eN?eur(o.eN):'–'}</td><td><b>${o.eE+o.eN?eur(o.eE+o.eN):'–'}</b></td></tr>`}).join('')}</table><div class="m">Las horas extra de cada semana se cuentan en el mes en que empieza la semana.</div>`:'';
+ $('tot').innerHTML=ws.length?`<div class="big bad">${h(tE)} extra</div><div>${h(tN)} nocturnas · ${h(tU)} no reconocidas por la empresa · horas extra este año: <b class="${yr>4800?'bad':''}">${h(yr)}</b> de 80 h permitidas${mo?`<div style="margin-top:6px">Te corresponderían ≈ <b>${eur(tEE)}</b> por horas extra${np?` + <b>${eur(tNN)}</b> de nocturnidad`:' (nocturnidad: pon el % de tu convenio para calcularla)'} = <b class="bad">${eur(tEE+tNN)}</b> <span class="m">estimación orientativa</span></div>`:''}`:'';
+ $('lst').innerHTML=rows.length?`<table><tr><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Avisos</th><th></th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc(r.n)}"><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td class="bad">${r.al.join(', ')}</td><td><button class="x" onclick="del(${r.id})">✕</button></td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
+}
+window.del=id=>{if(confirm('¿Borrar este turno?')){E=E.filter(x=>x.id!==id);sv();render()}};
+
+/* ---------- IA (Gemini) ---------- */
+const LEY='Eres asistente laboral para un conductor de furgoneta en España. Aplica la ley española: Estatuto de los Trabajadores art. 34 (jornada ordinaria máx. 9 h/día salvo pacto, 12 h de descanso entre jornadas, pausa de 15 min si pasa de 6 h, registro de jornada), art. 35 (horas extra: abono no inferior a la hora ordinaria o compensación con descanso en 4 meses, máx. 80/año), art. 36 (nocturno de 22:00 a 6:00; trabajador nocturno si hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya contemple la nocturnidad), art. 37 (1,5 días de descanso semanal), art. 59 (prescripción de un año), y las reglas especiales del transporte por carretera (RD 1561/1995, convenio). No inventes importes ni artículos; si algo depende del convenio o del contrato, dilo claramente. Responde en español sencillo, en texto plano sin markdown, directo y corto. Recuerda que no eres abogado y sugiere sindicato o abogado laboralista cuando proceda.';
+const ctx=()=>`CONTRATO: ${S.wk||40} h/semana, ${S.dy||8} h/día. Salario base ${S.bs||'?'} €/mes (30 días) + pagas prorrateadas ${S.pp||0} €/mes. Valor hora normal calculado: ${D.rt?D.rt.toFixed(2):'?'} €. Hora extra: ${D.ex?D.ex.toFixed(2):'?'} €. Plus nocturnidad: ${S.np?S.np+'%':'no consta'}. Convenio y cláusulas: ${S.cn||'no indicado'}.`;
+async function gem(parts,json){
+ const k=getK();if(!k)throw new Error('Falta la clave de Gemini (⚙️ arriba).');
+ const ms=$('md').value.split(/[\n,]+/).map(x=>x.trim()).filter(Boolean);if(!ms.length)throw new Error('No hay ningún modelo en la lista.');
+ let err='';
+ for(const m of ms){
+  try{
+   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(m)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:json?{responseMimeType:'application/json'}:{}})});
+   const j=await r.json().catch(()=>({}));
+   if(r.status===401||r.status===403||(r.status===400&&/api key/i.test((j.error&&j.error.message)||''))){throw Object.assign(new Error('La clave de Gemini no es válida o no tiene permiso.'),{stop:1})}
+   if(!r.ok){err=m+': '+((j.error&&j.error.message)||r.status);continue}
+   const t=(((j.candidates||[])[0]||{}).content||{}).parts;
+   if(!t){err=m+': sin respuesta';continue}
+   return t.map(p=>p.text||'').join('')
+  }catch(e){if(e.stop)throw e;err=m+': '+e.message}
+ }
+ throw new Error('Ningún modelo ha funcionado. Último error: '+err)
+}
+const keyUI=()=>{$('aks2').textContent=getK()?'✅ Clave guardada en este navegador.':'Sin clave guardada.'};keyUI();
+$('aks').onclick=()=>{const v=$('ak').value.trim();if(!v)return;try{localStorage.setItem('rj_k',v)}catch(e){}$('ak').value='';keyUI()};
+$('akd').onclick=()=>{try{localStorage.removeItem('rj_k')}catch(e){}keyUI()};
+const b64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
+$('cr').onclick=async()=>{const f=$('cf').files[0],st=$('cst');if(!f){st.textContent='Elige primero el PDF o la foto.';return}
+ st.textContent='Leyendo el contrato…';
+ try{const q='Del contrato de trabajo adjunto (España) extrae datos y responde SOLO un JSON con estas claves (número o null si no aparece): horasSemanales, horasDiarias, salarioBaseMensual (€ brutos/mes sin pagas extra), pagasProrrateadasMensual (€/mes, 0 si no están prorrateadas), horasAnuales, precioHoraExtra, plusNocturnidadPorcentaje, convenio (texto), resumen (texto breve: categoría, tipo de jornada, nocturnidad, si el salario ya incluye nocturnidad u horas extra, y cualquier cláusula de jornada relevante). No inventes datos.';
+  let t=await gem([{text:q},{inline_data:{mime_type:f.type||'application/pdf',data:await b64(f)}}],true);
+  const d=JSON.parse(t.replace(/```json|```/g,'').trim());
+  const set=(id,v)=>{if(v!==null&&v!==undefined&&v!==''){$(id).value=v;S[id]=String(v)}};
+  set('wk',d.horasSemanales);set('dy',d.horasDiarias);set('bs',d.salarioBaseMensual);set('pp',d.pagasProrrateadasMensual);set('ah',d.horasAnuales);set('ex',d.precioHoraExtra);set('np',d.plusNocturnidadPorcentaje);
+  const nt=[d.convenio,d.resumen].filter(Boolean).join(' — ');if(nt){$('cn').value=nt;S.cn=nt}
+  sv();render();st.innerHTML='<span class="ok">Datos rellenados. Revísalos con el contrato delante.</span>'}
+ catch(e){st.textContent='No se pudo leer: '+e.message}};
+
+function turnLocal(r){let t=`${h(r.w)} trabajadas`;
+ if(r.over)t+=`, ${h(r.over)} por encima de tu jornada diaria${D.ex?` (≈ ${eur(r.over/60*D.ex)})`:''}`;
+ if(r.nt)t+=`. Nocturnas (22:00–6:00): ${h(r.nt)}${r.nt>=180?' → ese día cuentas como trabajador nocturno':''}${D.np&&D.rt?`, plus ≈ ${eur(r.nt/60*D.rt*D.np)}`:' (el importe del plus lo fija tu convenio)'}`;
+ return t+'. <span class="m">Lo que cuenta para las extras es el total semanal.</span>'+(r.al.length?`<div class="bad">Avisos: ${r.al.join(', ')}</div>`:'')}
+$('add').onclick=async()=>{
+ if(!$('d').value||!$('s').value||!$('e').value){alert('Pon al menos fecha, inicio y fin.');return}
+ const id=Date.now();E.push({id,d:$('d').value,s:$('s').value,e:$('e').value,b:+$('b').value||0,k:+$('k').value||0,cs:$('cs').value,ce:$('ce').value,n:$('n').value});
+ ['s','e','k','cs','ce','n'].forEach(i=>$(i).value='');sv();render();
+ const r=D.rows.find(x=>x.id===id);if(!r)return;const dm=$('dm');dm.innerHTML='<b>Este turno:</b> '+turnLocal(r);
+ if(!getK()){dm.innerHTML+='<div class="m">Añade tu clave de Gemini (⚙️) para que la IA analice cada turno con la ley.</div>';return}
+ dm.innerHTML+='<div class="ai">Consultando a la IA…</div>';
+ try{const wk=D.W[mon(r.d)];const t=await gem([{text:LEY+'\n\n'+ctx()+`\n\nTURNO: fecha ${r.d}, real ${r.s}-${r.e}, pausa ${r.b} min, ${h(r.w)} trabajadas, ${h(r.nt)} nocturnas, ${h(r.over)} sobre jornada diaria, descanso desde el turno anterior: ${r.rest===null?'n/d':h(r.rest)}, empresa registra ${r.cs?r.cs+'-'+r.ce:'sin dato'}. SEMANA: ${h(wk.w)} trabajadas, ${h(wk.extra)} extra sobre contrato.\n\nExplica en máximo 8 líneas: ¿hay horas nocturnas y qué dice la ley?, ¿hay horas extra?, ¿hay incumplimientos de descanso o jornada?, ¿qué cuantía corresponde con los datos disponibles?`}]);
+  dm.lastChild.textContent=t}catch(e){dm.lastChild.textContent='IA: '+e.message}};
+
+$('rb').onclick=async()=>{const m=$('rm').value,out=$('rep');out.hidden=false;
+ const rows=D.rows.filter(r=>r.d.slice(0,7)===m);if(!rows.length){out.textContent='No hay turnos en ese mes.';return}
+ const ws=Object.values(D.W).filter(o=>o.k.slice(0,7)===m);
+ const data={dias:rows.map(r=>({fecha:r.d,real:r.s+'-'+r.e,pausaMin:r.b,horas:h(r.w),nocturnas:h(r.nt),empresa:r.cs?r.cs+'-'+r.ce:null,horasReconocidas:r.paid!==null?h(r.paid):null,km:r.k,avisos:r.al})),semanas:ws.map(o=>({lunes:o.k,horas:h(o.w),extra:h(o.extra),nocturnas:h(o.nt),mayorDescansoSeguido:h(o.rest),eurosExtraCalculados:+o.eE.toFixed(2),eurosNocturnoCalculados:+o.eN.toFixed(2)}))};
+ out.textContent='Generando informe…';
+ try{out.textContent=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}])}
+ catch(e){out.textContent='IA: '+e.message}};
+
+/* ---------- copia y exportar ---------- */
+$('ex1').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({S,E})],{type:'application/json'}));a.download='registro-jornada-'+new Date().toISOString().slice(0,10)+'.json';a.click()};
+$('im1').onclick=()=>$('imf').click();
+$('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text());if(confirm('Esto reemplaza los datos actuales. ¿Continuar?')){S=j.S||{};E=j.E||[];sv();location.reload()}}catch(e){alert('Archivo no válido')}};
+$('cp').onclick=async()=>{let t='Fecha;Inicio;Fin;Pausa min;Horas;Nocturnas;Inicio empresa;Fin empresa;Km;Notas\n';D.rows.forEach(r=>t+=[r.d,r.s,r.e,r.b,h(r.w),h(r.nt),r.cs||'',r.ce||'',r.k,(r.n||'').replace(/[\n;]/g,' ')].join(';')+'\n');
+ try{await navigator.clipboard.writeText(t);alert('Copiado.')}catch(e){prompt('Copia este texto:',t)}};
+$('pr').onclick=()=>window.print();
+render();
+</script></body></html>
