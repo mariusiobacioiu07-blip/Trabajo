@@ -48,7 +48,7 @@ gemini-3.5-flash-lite</textarea></div>
 <div><label>Fecha de inicio en la empresa</label><input id="fi" type="date"></div>
 <div><label>Categoría / tipo de contrato</label><input id="ct"></div>
 <div class="full"><label>Provincia donde trabajas (el convenio de transporte suele ser provincial)</label><input id="pv"></div>
-<div class="full"><label>Horas anuales del convenio (vacío = semanales × 52,14)</label><input id="ah" type="number"></div>
+<div class="full"><label>Horas anuales de trabajo del convenio (vacío = estimación: 1.826 h para 40 h/semana; mira el dato de tu convenio)</label><input id="ah" type="number"></div>
 <div class="full"><label>Precio hora extra (€) del convenio. Vacío = valor de la hora normal (mínimo legal)</label><input id="ex" type="number" step="0.01"></div>
 <div class="full"><label>Plus nocturnidad (% sobre hora normal) que fija tu convenio. Vacío = no consta</label><input id="np" type="number"></div>
 <div class="full"><label>Convenio y cláusulas del contrato (jornada, nocturnidad, horas extra, si el salario ya incluye algo)</label><textarea id="cn" rows="3"></textarea></div>
@@ -107,7 +107,7 @@ const abs=(d,m)=>Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10))/60000+m;
 const eur=x=>x.toFixed(2)+' €';
 
 function calc(){
- const dayM=(+S.dy||8)*60,wkM=(+S.wk||40)*60,mo=(+S.bs||0)+(+S.pp||0),ah=+S.ah||(+S.wk||40)*52.14,rt=mo?mo*12/ah:0,ex=+S.ex||rt,np=(+S.np||0)/100;
+ const dayM=(+S.dy||8)*60,wkM=(+S.wk||40)*60,mo=(+S.bs||0)+(+S.pp||0),ah=+S.ah||(+S.wk||40)*45.66,rt=mo?mo*12/ah:0,ex=+S.ex||rt,np=(+S.np||0)/100;
  E.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:tm(a.s)-tm(b.s));
  let pe=null;
  const rows=E.map(x=>{const[a,z]=dur(x.s,x.e);const w=z-a-x.b,nt=night(a,z);let paid=null;
