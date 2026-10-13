@@ -47,11 +47,13 @@ gemini-3.5-flash-lite</textarea></div>
 <div><label>Pagas prorrateadas mensuales (€)</label><input id="pp" type="number" step="0.01"></div>
 <div><label>Fecha de inicio en la empresa</label><input id="fi" type="date"></div>
 <div><label>Categoría / tipo de contrato</label><input id="ct"></div>
+<div class="full"><label>Provincia donde trabajas (el convenio de transporte suele ser provincial)</label><input id="pv"></div>
 <div class="full"><label>Horas anuales del convenio (vacío = semanales × 52,14)</label><input id="ah" type="number"></div>
 <div class="full"><label>Precio hora extra (€) del convenio. Vacío = valor de la hora normal (mínimo legal)</label><input id="ex" type="number" step="0.01"></div>
 <div class="full"><label>Plus nocturnidad (% sobre hora normal) que fija tu convenio. Vacío = no consta</label><input id="np" type="number"></div>
 <div class="full"><label>Convenio y cláusulas del contrato (jornada, nocturnidad, horas extra, si el salario ya incluye algo)</label><textarea id="cn" rows="3"></textarea></div>
-</div><div id="hv" style="margin-top:8px"></div></div>
+</div><div id="hv" style="margin-top:8px"></div>
+<button id="sb">🔎 Buscar en la ley y el convenio (hora extra y nocturnidad)</button><div id="sres"></div></div>
 
 <div class="c np"><h2>2. Añadir turno</h2>
 <div class="g">
@@ -91,7 +93,7 @@ let S={},E=[],D={};
 try{S=JSON.parse(localStorage.getItem('rj_s')||'{}');E=JSON.parse(localStorage.getItem('rj_e')||'[]')}catch(e){}
 const getK=()=>{try{return localStorage.getItem('rj_k')||''}catch(e){return ''}};
 const sv=()=>{try{localStorage.setItem('rj_s',JSON.stringify(S));localStorage.setItem('rj_e',JSON.stringify(E))}catch(e){alert('Este navegador no deja guardar datos.')}};
-['wk','dy','bs','pp','ah','ex','np','cn','fi','ct'].forEach(f=>{if(S[f]!==undefined)$(f).value=S[f];$(f).oninput=()=>{S[f]=$(f).value;sv();render()}});
+['wk','dy','bs','pp','ah','ex','np','cn','fi','ct','pv'].forEach(f=>{if(S[f]!==undefined)$(f).value=S[f];$(f).oninput=()=>{S[f]=$(f).value;sv();render()}});
 if(S.md)$('md').value=S.md;$('md').oninput=()=>{S.md=$('md').value;sv()};
 $('d').value=new Date().toISOString().slice(0,10);$('rm').value=$('d').value.slice(0,7);
 const tm=t=>{const[a,b]=t.split(':');return +a*60+ +b};
@@ -138,19 +140,20 @@ window.del=id=>{if(confirm('¿Borrar este turno?')){E=E.filter(x=>x.id!==id);sv(
 
 /* ---------- IA (Gemini) ---------- */
 const LEY='Eres asistente laboral para un conductor de furgoneta en España. Aplica la ley española: Estatuto de los Trabajadores art. 34 (jornada ordinaria máx. 9 h/día salvo pacto, 12 h de descanso entre jornadas, pausa de 15 min si pasa de 6 h, registro de jornada), art. 35 (horas extra: abono no inferior a la hora ordinaria o compensación con descanso en 4 meses, máx. 80/año), art. 36 (nocturno de 22:00 a 6:00; trabajador nocturno si hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya contemple la nocturnidad), art. 37 (1,5 días de descanso semanal), art. 59 (prescripción de un año), y las reglas especiales del transporte por carretera (RD 1561/1995, convenio). No inventes importes ni artículos; si algo depende del convenio o del contrato, dilo claramente. Responde en español sencillo, en texto plano sin markdown, directo y corto. Recuerda que no eres abogado y sugiere sindicato o abogado laboralista cuando proceda.';
-const ctx=()=>`CONTRATO: ${S.wk||40} h/semana, ${S.dy||8} h/día. Salario base ${S.bs||'?'} €/mes (30 días) + pagas prorrateadas ${S.pp||0} €/mes. Valor hora normal calculado: ${D.rt?D.rt.toFixed(2):'?'} €. Hora extra: ${D.ex?D.ex.toFixed(2):'?'} €. Plus nocturnidad: ${S.np?S.np+'%':'no consta'}. Fecha de inicio: ${S.fi||'?'}. Categoría: ${S.ct||'?'}. Convenio y cláusulas: ${S.cn||'no indicado'}.`;
-async function gem(parts,json){
+const ctx=()=>`SITUACIÓN: la empresa solo paga las horas del contrato y no paga horas extra ni nocturnas; el trabajador SÍ las ha hecho (registro propio con capturas de la app de fichaje). Calcula lo que se le debería, no lo que la empresa ya paga. CONTRATO: ${S.wk||40} h/semana, ${S.dy||8} h/día. Salario base ${S.bs||'?'} €/mes (30 días) + pagas prorrateadas ${S.pp||0} €/mes. Valor hora normal calculado: ${D.rt?D.rt.toFixed(2):'?'} €. Hora extra: ${D.ex?D.ex.toFixed(2):'?'} €. Plus nocturnidad: ${S.np?S.np+'%':'no consta'}. Fecha de inicio: ${S.fi||'?'}. Categoría: ${S.ct||'?'}. Convenio y cláusulas: ${S.cn||'no indicado'}.`;
+async function gem(parts,json,search){
  const k=getK();if(!k)throw new Error('Falta la clave de Gemini (⚙️ arriba).');
  const ms=$('md').value.split(/[\n,]+/).map(x=>x.trim()).filter(Boolean);if(!ms.length)throw new Error('No hay ningún modelo en la lista.');
  let err='';
  for(const m of ms){
   try{
-   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(m)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:json?{responseMimeType:'application/json'}:{}})});
+   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(m)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:json&&!search?{responseMimeType:'application/json'}:{},...(search?{tools:[{google_search:{}}]}:{})})});
    const j=await r.json().catch(()=>({}));
    if(r.status===401||r.status===403||(r.status===400&&/api key/i.test((j.error&&j.error.message)||''))){throw Object.assign(new Error('La clave de Gemini no es válida o no tiene permiso.'),{stop:1})}
    if(!r.ok){err=m+': '+((j.error&&j.error.message)||r.status);continue}
    const t=(((j.candidates||[])[0]||{}).content||{}).parts;
    if(!t){err=m+': sin respuesta';continue}
+   if(search)window._src=(((j.candidates[0]||{}).groundingMetadata||{}).groundingChunks||[]).map(c=>c.web&&c.web.uri).filter(Boolean);
    return t.map(p=>p.text||'').join('')
   }catch(e){if(e.stop)throw e;err=m+': '+e.message}
  }
@@ -166,7 +169,7 @@ window.rmf=i=>{FL.splice(i,1);showFL()};
 $('cf').onchange=()=>{for(const f of $('cf').files)FL.push(f);$('cf').value='';showFL()};
 $('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.textContent='Añade primero el PDF o la foto.';return}
  st.textContent='Leyendo…';
- try{const q='Te paso mi contrato de trabajo y/o mi nómina (España). REGLA PARA LA NÓMINA: del salario solo quiero el SALARIO BASE y la PRORRATA DE PAGAS EXTRA (lo que paga la empresa por la jornada normal). IGNORA por completo horas extra, dietas, kilometraje, mejoras voluntarias, pluses, antigüedad, complementos y cualquier otro concepto; no los sumes al salario base. Extrae los datos de TODOS los documentos y responde SOLO un JSON con estas claves (usa null si el dato NO aparece escrito en los documentos; no inventes ni calcules salarios): horasSemanales, diasSalarioBase (número de días a los que corresponde el salario base en la nómina, normalmente 30; null si no hay nómina), diasSemana (días de trabajo a la semana), horasDiarias, salarioBaseMensual (€ brutos/mes sin pagas extra, 30 días), salarioAnualBruto, pagasProrrateadasMensual (€/mes; 0 si las pagas extra no están prorrateadas), horasAnuales, precioHoraExtra, plusNocturnidadPorcentaje, plusNocturnidadImporte, salarioRemiteAConvenio (true si el salario se remite a tablas salariales del convenio sin dar cifras), salarioIncluyeNocturnidad (true/false/null), fechaInicio (formato AAAA-MM-DD), tipoContrato, categoria, convenio, resumen (texto breve en español: tipo de jornada, distribución, nocturnidad, horas extra, pausas, cualquier cláusula sobre jornada o salario).';
+ try{const q='Te paso mi contrato de trabajo y/o mi nómina (España). REGLA PARA LA NÓMINA: del salario solo quiero el SALARIO BASE y la PRORRATA DE PAGAS EXTRA (lo que paga la empresa por la jornada normal). IGNORA por completo horas extra, dietas, kilometraje, mejoras voluntarias, pluses, antigüedad, complementos y cualquier otro concepto; no los sumes al salario base. Extrae los datos de TODOS los documentos y responde SOLO un JSON con estas claves (usa null si el dato NO aparece escrito en los documentos; no inventes ni calcules salarios): horasSemanales, diasSalarioBase (número de días a los que corresponde el salario base en la nómina, normalmente 30; null si no hay nómina), diasSemana (días de trabajo a la semana), horasDiarias, salarioBaseMensual (€ brutos/mes sin pagas extra, 30 días), salarioAnualBruto, pagasProrrateadasMensual (€/mes; 0 si las pagas extra no están prorrateadas), horasAnuales, precioHoraExtra, plusNocturnidadPorcentaje, plusNocturnidadImporte, salarioRemiteAConvenio (true si el salario se remite a tablas salariales del convenio sin dar cifras), salarioIncluyeNocturnidad (true/false/null), fechaInicio (formato AAAA-MM-DD), tipoContrato, categoria, convenio, provincia (provincia del centro de trabajo o del convenio provincial), resumen (texto breve en español: tipo de jornada, distribución, nocturnidad, horas extra, pausas, cualquier cláusula sobre jornada o salario).';
   const parts=[{text:q}];for(const f of fs)parts.push({inline_data:{mime_type:f.type||'application/pdf',data:await b64(f)}});
   const d=JSON.parse((await gem(parts,true)).replace(/```json|```/g,'').trim());
   const num=v=>v!==null&&v!==undefined&&v!==''&&!isNaN(+v)?+v:null;
@@ -178,7 +181,7 @@ $('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.text
   const ex=num(d.precioHoraExtra),npv=num(d.plusNocturnidadPorcentaje),ah=num(d.horasAnuales);
   set('wk',wk);set('dy',dy);set('bs',bs);set('pp',pp);set('ah',ah);set('ex',ex);set('np',npv);
   if(d.fechaInicio&&/^\d{4}-\d{2}-\d{2}$/.test(d.fechaInicio))set('fi',d.fechaInicio);
-  set('ct',[d.categoria,d.tipoContrato].filter(Boolean).join(' · '));
+  set('ct',[d.categoria,d.tipoContrato].filter(Boolean).join(' · '));set('pv',d.provincia);
   const nt=[d.convenio,d.resumen].filter(Boolean).join(' — ');if(nt){$('cn').value=nt;S.cn=nt}
   sv();render();
   const L=[['Horas semanales',wk!==null?wk+' h':null],['Horas diarias',dy!==null?dy+' h':null],['Salario base mensual',bs!==null?eur(bs)+note:null],['Pagas prorrateadas',pp!==null?(pp?eur(pp)+'/mes':'No prorrateadas'):null],['Fecha de inicio',d.fechaInicio||null],['Categoría / tipo',[d.categoria,d.tipoContrato].filter(Boolean).join(' · ')||null],['Convenio',d.convenio||null],['Precio hora extra',ex!==null?eur(ex):null],['Plus nocturnidad',npv!==null?npv+'%':(num(d.plusNocturnidadImporte)!==null?eur(+d.plusNocturnidadImporte)+'/h':null)],['Horas anuales',ah!==null?ah+' h':null]];
@@ -188,6 +191,18 @@ $('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.text
   st.innerHTML=o}
  catch(e){st.textContent='No se pudo leer: '+e.message}};
 
+$('sb').onclick=async()=>{const r=$('sres');
+ if(!S.pv){r.innerHTML='<span class="bad">Escribe primero la provincia donde trabajas (el convenio es provincial).</span>';return}
+ r.innerHTML='<div class="ai">Buscando en la ley y el convenio…</div>';
+ try{const t=await gem([{text:'Busca en internet datos OFICIALES (BOE, boletín oficial de la provincia, web del convenio) del convenio colectivo de transporte de mercancías por carretera de '+S.pv+' ('+(S.cn||'')+'), categoría '+(S.ct||'conductor repartidor')+', vigente en 2026 o la última tabla salarial publicada. Necesito: 1) precio de la hora extraordinaria en euros según las tablas salariales; 2) plus o complemento de nocturnidad (porcentaje o euros por hora) si el convenio lo regula; 3) horas anuales de jornada máxima del convenio; 4) si hay reglas especiales de tiempos de presencia o espera para conductores. Empieza con estas 4 líneas exactas: EXTRA_EUR=número o NO ENCONTRADO / NOCTURNO_PCT=número o NO ENCONTRADO / NOCTURNO_EUR_HORA=número o NO ENCONTRADO / HORAS_ANUALES=número o NO ENCONTRADO. Después explica en máximo 8 líneas, en español sencillo y texto plano, con el nombre y el año del convenio. NO inventes cifras: si no encuentras la tabla exacta, pon NO ENCONTRADO.'}],false,true);
+  const g=k=>{const m=t.match(new RegExp(k+'\\s*=\\s*([\\d.,]+)'));return m?parseFloat(m[1].replace(',','.')):null};
+  const ex=g('EXTRA_EUR'),np=g('NOCTURNO_PCT'),ne=g('NOCTURNO_EUR_HORA'),ah=g('HORAS_ANUALES');
+  const set=(id,v)=>{if(v!==null&&!isNaN(v)){$(id).value=v;S[id]=String(v)}};
+  set('ex',ex);set('ah',ah);if(np!==null)set('np',np);else if(ne!==null&&D.rt)set('np',+(ne/D.rt*100).toFixed(1));
+  sv();render();
+  const src=(window._src||[]).slice(0,5).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.replace(/^https?:\/\//,'').slice(0,60))+'</a>').join('<br>');
+  r.innerHTML='<div class="ai">'+esc(t)+'</div>'+(src?'<div class="m">Fuentes:<br>'+src+'</div>':'')+'<div class="m">Compruébalo con la tabla oficial. Si algo no coincide, corrige el campo a mano.</div>'}
+ catch(e){r.innerHTML='<span class="bad">No se pudo buscar: '+esc(e.message)+'</span>'}};
 function turnLocal(r){let t=`${h(r.w)} trabajadas`;
  if(r.over)t+=`. Horas de más sobre tu jornada diaria: <b>${h(r.over)}</b>${D.ex?` → te corresponden ≈ <b>${eur(r.over/60*D.ex)}</b>`:' (pon tu salario para ver los euros)'}`;
  else t+='. No has pasado de tu jornada diaria';
@@ -209,7 +224,7 @@ $('rb').onclick=async()=>{const m=$('rm').value,out=$('rep');out.hidden=false;
  const ws=Object.values(D.W).filter(o=>o.k.slice(0,7)===m);
  const data={dias:rows.map(r=>({fecha:r.d,real:r.s+'-'+r.e,pausaMin:r.b,horas:h(r.w),nocturnas:h(r.nt),empresa:r.cs?r.cs+'-'+r.ce:null,horasReconocidas:r.paid!==null?h(r.paid):null,km:r.k,avisos:r.al})),semanas:ws.map(o=>({lunes:o.k,horas:h(o.w),extra:h(o.extra),nocturnas:h(o.nt),mayorDescansoSeguido:h(o.rest),eurosExtraCalculados:+o.eE.toFixed(2),eurosNocturnoCalculados:+o.eN.toFixed(2)}))};
  out.textContent='Generando informe…';
- try{out.textContent=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}])}
+ try{out.textContent=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 0) TOTAL QUE SE LE DEBERÍA (horas extra × precio + nocturnidad si procede, con el desglose y qué cifras son estimación). 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}])}
  catch(e){out.textContent='IA: '+e.message}};
 
 /* ---------- copia y exportar ---------- */
