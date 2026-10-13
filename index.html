@@ -34,7 +34,7 @@ gemini-3.5-flash-lite</textarea></div>
 <button id="aks">Guardar clave</button><button class="s" id="akd">Borrar clave</button>
 <div id="aks2" class="m"></div>
 <hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
-<label>Contrato y/o nómina (PDF o foto). Puedes elegir varios archivos. La nómina trae el sueldo real</label><input id="cf" type="file" accept="application/pdf,image/*" multiple>
+<label>Contrato y/o nómina (PDF o foto). Añade los archivos de uno en uno: se van acumulando en la lista</label><input id="cf" type="file" accept="application/pdf,image/*"><div id="fl" class="m"></div>
 <button id="cr">Leer contrato con IA</button><div id="cst" class="m"></div>
 <div class="m" style="margin-top:6px">Al usar la IA, el contrato y tus turnos se envían a Google. Revisa siempre los datos que rellena.</div>
 </details>
@@ -160,15 +160,20 @@ const keyUI=()=>{$('aks2').textContent=getK()?'✅ Clave guardada en este navega
 $('aks').onclick=()=>{const v=$('ak').value.trim();if(!v)return;try{localStorage.setItem('rj_k',v)}catch(e){}$('ak').value='';keyUI()};
 $('akd').onclick=()=>{try{localStorage.removeItem('rj_k')}catch(e){}keyUI()};
 const b64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
-$('cr').onclick=async()=>{const fs=[...$('cf').files],st=$('cst');if(!fs.length){st.textContent='Elige primero el PDF o la foto.';return}
+const FL=[];
+const showFL=()=>{$('fl').innerHTML=FL.length?'Archivos para leer ('+FL.length+'):<br>'+FL.map((f,i)=>esc(f.name||'archivo')+' <button class="x" onclick="rmf('+i+')">✕</button>').join('<br>')+'<br>Puedes añadir otro con el botón de arriba.':''};
+window.rmf=i=>{FL.splice(i,1);showFL()};
+$('cf').onchange=()=>{for(const f of $('cf').files)FL.push(f);$('cf').value='';showFL()};
+$('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.textContent='Añade primero el PDF o la foto.';return}
  st.textContent='Leyendo…';
- try{const q='Te paso mi contrato de trabajo y/o mi nómina (España). Extrae los datos de TODOS los documentos y responde SOLO un JSON con estas claves (usa null si el dato NO aparece escrito en los documentos; no inventes ni calcules salarios): horasSemanales, diasSemana (días de trabajo a la semana), horasDiarias, salarioBaseMensual (€ brutos/mes sin pagas extra, 30 días), salarioAnualBruto, pagasProrrateadasMensual (€/mes; 0 si las pagas extra no están prorrateadas), horasAnuales, precioHoraExtra, plusNocturnidadPorcentaje, plusNocturnidadImporte, salarioRemiteAConvenio (true si el salario se remite a tablas salariales del convenio sin dar cifras), salarioIncluyeNocturnidad (true/false/null), fechaInicio (formato AAAA-MM-DD), tipoContrato, categoria, convenio, resumen (texto breve en español: tipo de jornada, distribución, nocturnidad, horas extra, pausas, cualquier cláusula sobre jornada o salario).';
+ try{const q='Te paso mi contrato de trabajo y/o mi nómina (España). REGLA PARA LA NÓMINA: del salario solo quiero el SALARIO BASE y la PRORRATA DE PAGAS EXTRA (lo que paga la empresa por la jornada normal). IGNORA por completo horas extra, dietas, kilometraje, mejoras voluntarias, pluses, antigüedad, complementos y cualquier otro concepto; no los sumes al salario base. Extrae los datos de TODOS los documentos y responde SOLO un JSON con estas claves (usa null si el dato NO aparece escrito en los documentos; no inventes ni calcules salarios): horasSemanales, diasSalarioBase (número de días a los que corresponde el salario base en la nómina, normalmente 30; null si no hay nómina), diasSemana (días de trabajo a la semana), horasDiarias, salarioBaseMensual (€ brutos/mes sin pagas extra, 30 días), salarioAnualBruto, pagasProrrateadasMensual (€/mes; 0 si las pagas extra no están prorrateadas), horasAnuales, precioHoraExtra, plusNocturnidadPorcentaje, plusNocturnidadImporte, salarioRemiteAConvenio (true si el salario se remite a tablas salariales del convenio sin dar cifras), salarioIncluyeNocturnidad (true/false/null), fechaInicio (formato AAAA-MM-DD), tipoContrato, categoria, convenio, resumen (texto breve en español: tipo de jornada, distribución, nocturnidad, horas extra, pausas, cualquier cláusula sobre jornada o salario).';
   const parts=[{text:q}];for(const f of fs)parts.push({inline_data:{mime_type:f.type||'application/pdf',data:await b64(f)}});
   const d=JSON.parse((await gem(parts,true)).replace(/```json|```/g,'').trim());
   const num=v=>v!==null&&v!==undefined&&v!==''&&!isNaN(+v)?+v:null;
   const set=(id,v)=>{if(v!==null&&v!==undefined&&v!==''){$(id).value=v;S[id]=String(v)}};
   const wk=num(d.horasSemanales),ds=num(d.diasSemana);let dy=num(d.horasDiarias);if(dy===null&&wk&&ds)dy=+(wk/ds).toFixed(2);
-  let bs=num(d.salarioBaseMensual),pp=num(d.pagasProrrateadasMensual),sa=num(d.salarioAnualBruto),note='';
+  let bs=num(d.salarioBaseMensual),pp=num(d.pagasProrrateadasMensual),sa=num(d.salarioAnualBruto),dn=num(d.diasSalarioBase),note='';
+  if(dn&&dn!==30){if(bs!==null)bs=+(bs/dn*30).toFixed(2);if(pp)pp=+(pp/dn*30).toFixed(2);note=' (ajustado a 30 días desde '+dn+')'}
   if(bs===null&&sa){bs=+(sa/12).toFixed(2);pp=0;note=' (calculado: salario anual ÷ 12)'}
   const ex=num(d.precioHoraExtra),npv=num(d.plusNocturnidadPorcentaje),ah=num(d.horasAnuales);
   set('wk',wk);set('dy',dy);set('bs',bs);set('pp',pp);set('ah',ah);set('ex',ex);set('np',npv);
