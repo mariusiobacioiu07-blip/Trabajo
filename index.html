@@ -83,7 +83,7 @@ gemini-3.5-flash-lite</textarea></div>
 <div class="c np"><h2>5. Turnos</h2><div class="sc" id="lst"></div></div>
 
 <div class="c np"><h2>6. Copia de seguridad</h2>
-<button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="cp">Copiar CSV</button>
+<button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="cp">Copiar CSV</button><button class="s" id="dall">Borrar todos los turnos</button>
 <input id="imf" type="file" accept=".json" hidden></div>
 
 <div class="c m"><b>Referencia (Estatuto de los Trabajadores; verifica con tu convenio):</b> jornada diaria ordinaria máx. 9 h salvo pacto (art. 34.3); 12 h de descanso entre jornadas (34.3); pausa de 15 min si pasas de 6 h (34.4); registro diario de jornada, que la empresa conserva 4 años (34.9). Horas extra: se pagan al menos como la hora normal o se compensan con descanso en 4 meses, máx. 80 al año (art. 35). Nocturnidad: de 22:00 a 6:00; es trabajador nocturno quien hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya se fijara contando la nocturnidad (art. 36). Descanso semanal: 1,5 días seguidos (art. 37). Las reclamaciones de cantidades prescriben en general al año (art. 59). El transporte por carretera tiene reglas especiales (RD 1561/1995 y convenio), por ejemplo en tiempos de espera o presencia: consúltalo con un sindicato o abogado laboralista.</div>
@@ -117,9 +117,9 @@ function calc(){
   const al=[];if(w>540)al.push('más de 9 h');if(rest!==null&&rest<720)al.push('descanso '+h(rest));if(w>360&&x.b<15)al.push('sin pausa de 15 min');if(paid!==null&&w-paid>0)al.push(h(w-paid)+' no reconocidas');
   return{...x,w,nt,paid,st,en,rest,over:Math.max(0,w-dayM),al}});
  const W={};
- rows.forEach(r=>{const k=mon(r.d),o=W[k]=W[k]||{k,w:0,nt:0,km:0,paid:0,hp:0,days:0,pts:[]};o.w+=r.w;o.nt+=r.nt;o.km+=r.k;o.days++;o.pts.push([r.st,r.en]);if(r.paid!==null){o.paid+=r.paid;o.hp+=r.w}});
+ rows.forEach(r=>{const k=mon(r.d),o=W[k]=W[k]||{k,w:0,nt:0,km:0,paid:0,hp:0,days:0,pts:[]};o.dov=(o.dov||0)+r.over;o.w+=r.w;o.nt+=r.nt;o.km+=r.k;o.days++;o.pts.push([r.st,r.en]);if(r.paid!==null){o.paid+=r.paid;o.hp+=r.w}});
  Object.values(W).forEach(o=>{const M=abs(o.k,0),p=[[M,M],...o.pts,[M+10080,M+10080]];let g=0;for(let i=1;i<p.length;i++)g=Math.max(g,p[i][0]-p[i-1][1]);
-  o.rest=g;o.extra=Math.max(0,o.w-wkM);o.un=o.hp-o.paid;o.eE=o.extra/60*ex;o.eN=o.nt/60*rt*np;
+  o.rest=g;o.extra=Math.max(o.dov||0,o.w-wkM);o.un=o.hp-o.paid;o.eE=o.extra/60*ex;o.eN=o.nt/60*rt*np;
   o.al=[];if(o.w>2880)o.al.push('más de 48 h');if(o.rest<2160)o.al.push('sin 1,5 días de descanso')});
  D={rows,W,rt,ex,np,mo,ah,dayM,wkM};
 }
@@ -135,7 +135,7 @@ function render(){
  ws.forEach(o=>{const x=M[o.k.slice(0,7)];if(x){x.ex+=o.extra;x.eE+=o.eE;x.eN+=o.eN}});
  $('mot').innerHTML=ws.length?`<table><tr><th>Mes</th><th>Trabajadas</th><th>Extra</th><th>Nocturnas</th><th>No reconoc.</th><th>Km</th><th>€ extra</th><th>€ noct.</th><th>Total €</th></tr>${Object.keys(M).sort().map(k=>{const o=M[k];return`<tr><td>${k.slice(5)}/${k.slice(0,4)}</td><td>${h(o.w)}</td><td>${h(o.ex)}</td><td>${h(o.nt)}</td><td>${o.hp?h(o.hp-o.paid):'–'}</td><td>${o.km}</td><td>${o.eE?eur(o.eE):'–'}</td><td>${o.eN?eur(o.eN):'–'}</td><td><b>${o.eE+o.eN?eur(o.eE+o.eN):'–'}</b></td></tr>`}).join('')}</table><div class="m">Las horas extra de cada semana se cuentan en el mes en que empieza la semana.</div>`:'';
  $('tot').innerHTML=ws.length?`<div class="big bad">${h(tE)} extra</div><div>${h(tN)} nocturnas · ${h(tU)} no reconocidas por la empresa · horas extra este año: <b class="${yr>4800?'bad':''}">${h(yr)}</b> de 80 h permitidas${mo?`<div style="margin-top:6px">Te corresponderían ≈ <b>${eur(tEE)}</b> por horas extra${np?` + <b>${eur(tNN)}</b> de nocturnidad`:' (nocturnidad: pon el % de tu convenio para calcularla)'} = <b class="bad">${eur(tEE+tNN)}</b> <span class="m">estimación orientativa</span></div>`:''}`:'';
- $('lst').innerHTML=rows.length?`<table><tr><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Avisos</th><th></th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc(r.n)}"><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td class="bad">${r.al.join(', ')}</td><td><button class="x" onclick="del(${r.id})">✕</button></td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
+ $('lst').innerHTML=rows.length?`<table><tr><th></th><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Avisos</th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc(r.n)}"><td><button class="x" onclick="del(${r.id})">🗑 Borrar</button></td><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td class="bad">${r.al.join(', ')}</td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
 }
 window.del=id=>{if(confirm('¿Borrar este turno?')){E=E.filter(x=>x.id!==id);sv();render()}};
 
@@ -215,7 +215,7 @@ function turnLocal(r){let t=`${h(r.w)} trabajadas`;
  else t+='. No has pasado de tu jornada diaria';
  if(r.nt)t+=`. Horas nocturnas (22:00–6:00): <b>${h(r.nt)}</b>${r.nt>=180?' → ese día cuentas como trabajador nocturno':''}${D.np&&D.rt?` → plus ≈ <b>${eur(r.nt/60*D.rt*D.np)}</b>`:' (el importe del plus lo fija tu convenio; pon el % si consta)'}`;
  else t+='. Horas nocturnas: ninguna';
- return t+'. <span class="m">Lo que cuenta para las extras es el total semanal.</span>'+(r.al.length?`<div class="bad">Avisos: ${r.al.join(', ')}</div>`:'')}
+ return t+'. <span class="m">Cuenta como extra lo que pasa de tu jornada diaria o de tus horas semanales (lo que sea mayor).</span>'+(r.al.length?`<div class="bad">Avisos: ${r.al.join(', ')}</div>`:'')}
 $('add').onclick=async()=>{
  if(!$('d').value||!$('s').value||!$('e').value){alert('Pon al menos fecha, inicio y fin.');return}
  const id=Date.now();E.push({id,d:$('d').value,s:$('s').value,e:$('e').value,b:+$('b').value||0,k:+$('k').value||0,cs:$('cs').value,ce:$('ce').value,n:$('n').value});
@@ -240,6 +240,7 @@ $('im1').onclick=()=>$('imf').click();
 $('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text());if(confirm('Esto reemplaza los datos actuales. ¿Continuar?')){S=j.S||{};E=j.E||[];sv();location.reload()}}catch(e){alert('Archivo no válido')}};
 $('cp').onclick=async()=>{let t='Fecha;Inicio;Fin;Pausa min;Horas;Nocturnas;Inicio empresa;Fin empresa;Km;Notas\n';D.rows.forEach(r=>t+=[r.d,r.s,r.e,r.b,h(r.w),h(r.nt),r.cs||'',r.ce||'',r.k,(r.n||'').replace(/[\n;]/g,' ')].join(';')+'\n');
  try{await navigator.clipboard.writeText(t);alert('Copiado.')}catch(e){prompt('Copia este texto:',t)}};
+$('dall').onclick=()=>{if(E.length&&confirm('¿Borrar TODOS los turnos? No se puede deshacer.')){E=[];sv();$('dm').innerHTML='';render()}};
 $('pr').onclick=()=>window.print();
 render();
 </script></body></html>
