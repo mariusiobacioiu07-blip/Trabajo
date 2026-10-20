@@ -356,6 +356,15 @@ const getPos=()=>new Promise(res=>{if(!navigator.geolocation)return res({err:'Es
   e=>{if(e.code===1)return res({err:geoErr(1)});
    navigator.geolocation.getCurrentPosition(ok,e2=>res({err:geoErr(e2.code)}),{enableHighAccuracy:false,timeout:15000,maximumAge:60000})},
   {enableHighAccuracy:true,timeout:12000,maximumAge:0})});
+/* diagnóstico temporal de ubicación */
+window.addEventListener('DOMContentLoaded',()=>{const b=document.createElement('button');b.textContent='🛠 Probar ubicación';
+ b.style.cssText='position:fixed;right:10px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;padding:9px 13px;border-radius:20px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:13px';
+ b.onclick=async()=>{let t='Modo app: '+(isStandalone()?'sí':'no')+'\nWeb: '+location.origin+'\n';
+  try{const r=await navigator.permissions.query({name:'geolocation'});t+='Permiso: '+r.state+'\n'}catch(e){t+='Permiso: no consultable\n'}
+  await new Promise(r=>{if(!navigator.geolocation){t+='Sin API de ubicación';return r()}
+   navigator.geolocation.getCurrentPosition(p=>{t+='OK '+p.coords.latitude.toFixed(4)+', '+p.coords.longitude.toFixed(4)+' ±'+Math.round(p.coords.accuracy)+' m';r()},
+    e=>{t+='ERROR código '+e.code+': '+e.message;r()},{enableHighAccuracy:false,timeout:15000,maximumAge:0})});
+  alert(t)};document.body.appendChild(b)});
 const geoName=async p=>{try{const ac=new AbortController();setTimeout(()=>ac.abort(),8000);
  const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=es&lat='+p.lat+'&lon='+p.lon,{signal:ac.signal});
  const a=(await r.json()).address||{};const z=a.industrial||a.neighbourhood||a.suburb||a.quarter||a.city_district||'',c=a.city||a.town||a.village||a.municipality||'';
