@@ -4,6 +4,9 @@
 <title>Jornadas reales</title>
 <meta name="apple-mobile-web-app-title" content="Jornadas reales">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="application-name" content="Jornadas reales">
 <meta name="theme-color" content="#0f172a">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -344,7 +347,7 @@ const shortLoc=m=>!m?'–':m.lat===undefined?'⚠️':'<a href="https://maps.goo
 const nEv=d=>(S.ev||[]).filter(m=>m.d===d).length;
 const isStandalone=()=>navigator.standalone===true||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
 const geoErr=c=>c===1?(isStandalone()
- ?'Permiso de ubicación denegado para el icono de inicio. Solución: borra este icono, abre el enlace en Safari, vuelve a añadirlo a inicio y pulsa «Permitir» cuando pregunte. (Ajustes > Privacidad > Localización > busca «Jornadas reales» > Mientras se usa).'
+ ?'La ubicación está bloqueada en modo app. Cierra la app del todo (desliza hacia arriba), ábrela y pulsa «Permitir» cuando pregunte. Si no pregunta, borra el icono y vuelve a añadirlo desde Safari.'
  :'Permiso de ubicación denegado (iPhone: Ajustes > Privacidad > Localización > Safari).')
  :c===3?'Tardó demasiado en coger la ubicación. Sal a cielo abierto y reintenta.':'No se pudo obtener la ubicación.';
 const getPos=()=>new Promise(res=>{if(!navigator.geolocation)return res({err:'Este navegador no tiene GPS.'});
