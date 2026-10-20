@@ -58,7 +58,8 @@ gemini-3.5-flash-lite</textarea></div>
 <div style="margin-top:8px"><label>Client ID de Google (acaba en .apps.googleusercontent.com; no es secreto)</label><input id="gc" autocomplete="off" placeholder="1234-abcd.apps.googleusercontent.com"></div>
 <button id="gcs">Guardar y conectar</button><button class="s" id="gcd">Desconectar</button>
 <div id="gst" class="m"></div>
-<div class="m">Los archivos van a una carpeta «Registro jornada» de tu Drive. La app solo puede ver lo que ella misma sube.</div></details>
+<div class="m">Los archivos van a una carpeta «Registro jornada» de tu Drive. La app solo puede ver lo que ella misma sube.</div>
+<div class="m" style="margin-top:8px">Cada mes cerrado, la app sube sola su PDF a Drive la primera vez que la abres el mes siguiente.</div><button class="s" id="pdb">☁️ Subir PDFs de meses cerrados ahora</button><div id="pdst" class="m"></div></details>
 
 <div class="c np"><h2>👤 Mis datos (salen en el PDF)</h2><div class="g">
 <div class="full"><label>Nombre y apellidos</label><input id="pn" autocomplete="name"></div>
@@ -294,9 +295,9 @@ function repData(m){
 function contractLines(){const L=['Contrato: '+(S.wk||40)+' h/semana, '+(S.dy||8)+' h/dia'+(S.pv?'. Provincia: '+S.pv:'')+(S.ct?'. Categoria: '+S.ct:'')];
  if(D.mo)L.push('Salario base + pagas prorrateadas: '+D.mo.toFixed(2)+' EUR/mes. Hora normal: '+D.rt.toFixed(2)+' EUR (sobre '+Math.round(D.ah)+' h anuales). Hora extra: '+D.ex.toFixed(2)+' EUR'+(D.np?'. Plus nocturno: '+(D.np*100)+'% sobre la hora normal':''));
  return L.map(lat)}
-async function makePDF(m){
- if(!window.jspdf||!window.jspdf.jsPDF){alert('No se pudo cargar el generador de PDF (¿sin internet?). Prueba con «Texto del mes».');return}
- const d=repData(m);if(!d.rows.length){alert('No hay turnos en ese periodo.');return}
+async function makePDF(m,q){
+ if(!window.jspdf||!window.jspdf.jsPDF){if(q)throw new Error('No se pudo cargar el generador de PDF.');alert('No se pudo cargar el generador de PDF (¿sin internet?). Prueba con «Texto del mes».');return}
+ const d=repData(m);if(!d.rows.length){if(q)return null;alert('No hay turnos en ese periodo.');return}
  const doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});let y=44;
  const line=(txt,sz,b)=>{doc.setFontSize(sz||10);doc.setFont('helvetica',b?'bold':'normal');for(const l of doc.splitTextToSize(lat(txt),515)){if(y>790){doc.addPage();y=44}doc.text(l,40,y);y+=(sz||10)+3}};
  line('Registro de jornada - '+d.label,16,1);y+=4;
@@ -318,6 +319,7 @@ async function makePDF(m){
  if(window._rep&&(window._rep.m===m||!m)&&window._rep.t){line('INFORME DE LA IA ('+window._rep.m.slice(5)+'/'+window._rep.m.slice(0,4)+')',12,1);window._rep.t.split('\n').forEach(l=>line(l||' ',9))}
  else line('Informe de la IA: no generado para este periodo.',9);
  y+=8;line('Las horas y coordenadas de entrada y salida marcadas con GPS se registraron en el momento de pulsar iniciar y finalizar turno, con la hora y la ubicacion del movil del trabajador. Las fotos y videos de la aplicacion de fichaje de la empresa se conservan como prueba (columna Pruebas).',8);y+=4;line('Documento orientativo elaborado con registros propios del trabajador (incluidas capturas de la aplicacion de fichaje de la empresa). No es asesoramiento juridico: revisar con un sindicato o abogado laboralista.',8);
+ if(q)return doc.output('blob');
  await deliver(doc.output('blob'),'informe-jornada-'+(m||'completo')+'.pdf')}
 async function makeTXT(m){
  const d=repData(m);if(!d.rows.length){alert('No hay turnos en ese periodo.');return}
@@ -411,4 +413,25 @@ $('gcd').onclick=()=>{S.gcid='';S.gok=0;S.dfid='';TOK=null;sv();driveUI();render
 driveUI();liveUI();fillPlaces();
 
 render();
+
+/* ---------- PDF mensual automático a Drive ---------- */
+async function upBlob(t,name,blob,desc){const f=await fid(t),ty='application/pdf';
+ const i=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':ty},body:JSON.stringify({name,parents:[f],description:desc})});
+ if(i.status===404){S.dfid='';sv()}if(!i.ok)throw await gerr(i);const loc=i.headers.get('Location');if(!loc)throw new Error('Drive no devolvió la dirección de subida.');
+ const u=await fetch(loc,{method:'PUT',headers:{'Content-Type':ty},body:blob});if(!u.ok)throw await gerr(u);return u.json()}
+let autoBusy=false;
+async function autoMonths(manual){if(autoBusy||!S.gcid||(!S.gok&&!manual))return;
+ const cur=todayS().slice(0,7);S.pdfd=S.pdfd||{};const st=$('pdst');
+ const sig=k=>{const d=repData(k);return d.rows.length+'|'+d.t.w.toFixed(2)};
+ const todo=[...new Set(E.map(x=>x.d.slice(0,7)))].filter(k=>k<cur).sort().filter(k=>repData(k).rows.length&&S.pdfd[k]!==sig(k));
+ if(!todo.length){if(manual)st.textContent='No hay meses cerrados pendientes.';return}
+ autoBusy=true;
+ try{const t=await token();for(const k of todo){st.textContent='Subiendo PDF de '+k+'…';const blob=await makePDF(k,1);if(!blob)continue;
+  await upBlob(t,'informe-jornada-'+k+'.pdf',blob,'Informe mensual '+k+' · generado '+new Date().toISOString().slice(0,10));S.pdfd[k]=sig(k);sv()}
+  st.innerHTML='<span class="ok">✅ PDFs mensuales subidos a Drive.</span>'}
+ catch(e){st.innerHTML='<span class="bad">No se pudo subir el PDF: '+esc(e.message)+'</span> Toca «Subir PDFs de meses cerrados ahora».'}
+ autoBusy=false}
+$('pdb').onclick=()=>autoMonths(true);
+document.addEventListener('click',()=>autoMonths(),{once:true});
+autoMonths();
 </script></body></html>
