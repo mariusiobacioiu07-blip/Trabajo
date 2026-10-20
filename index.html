@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mi registro de jornada</title>
+<title>Jornadas reales</title>
+<meta name="apple-mobile-web-app-title" content="Jornadas reales">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Jornadas reales">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#667;--bd:#dde1e6;--ac:#1d5fd1;--bad:#c62828;--ok:#2e7d32}
 @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1e2328;--tx:#e8eaed;--mut:#9aa;--bd:#333a42;--ac:#6ea0ff;--bad:#ff7b72;--ok:#6fcf7a}}
@@ -114,7 +120,7 @@ gemini-3.5-flash-lite</textarea></div>
 <div class="c np"><h2>6. Copia de seguridad</h2>
 <button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="cp">Copiar CSV</button><button class="s" id="dall">Borrar todos los turnos</button>
 <input id="imf" type="file" accept=".json" hidden>
-<div class="m" style="margin-top:6px">La copia JSON guarda turnos, ubicaciones y datos, pero no las fotos y vídeos: esos viven en este móvil y en Drive.</div></div>
+<div class="m" style="margin-top:6px">La copia JSON guarda todo: turnos, ubicaciones, tus datos, contrato, Client ID de Drive y la clave de Gemini (guárdala en un sitio privado, la clave va dentro). No guarda las fotos y vídeos: esos viven en este móvil y en Drive.</div></div>
 
 <div class="c m"><b>Referencia (Estatuto de los Trabajadores; verifica con tu convenio):</b> jornada diaria ordinaria máx. 9 h salvo pacto (art. 34.3); 12 h de descanso entre jornadas (34.3); pausa de 15 min si pasas de 6 h (34.4); registro diario de jornada, que la empresa conserva 4 años (34.9). Horas extra: se pagan al menos como la hora normal o se compensan con descanso en 4 meses, máx. 80 al año (art. 35). Nocturnidad: de 22:00 a 6:00; es trabajador nocturno quien hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya se fijara contando la nocturnidad (art. 36). Descanso semanal: 1,5 días seguidos (art. 37). Las reclamaciones de cantidades prescriben en general al año (art. 59). El transporte por carretera tiene reglas especiales (RD 1561/1995 y convenio), por ejemplo en tiempos de espera o presencia: consúltalo con un sindicato o abogado laboralista.</div>
 
@@ -274,9 +280,9 @@ $('rb').onclick=async()=>{const m=$('rm').value,out=$('rep');out.hidden=false;
  catch(e){out.textContent='IA: '+e.message}};
 
 /* ---------- copia y exportar ---------- */
-$('ex1').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({S,E})],{type:'application/json'}));a.download='registro-jornada-'+new Date().toISOString().slice(0,10)+'.json';a.click()};
+$('ex1').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({S,E,K:getK()})],{type:'application/json'}));a.download='registro-jornada-'+new Date().toISOString().slice(0,10)+'.json';a.click()};
 $('im1').onclick=()=>$('imf').click();
-$('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text());if(confirm('Esto reemplaza los datos actuales. ¿Continuar?')){S=j.S||{};E=j.E||[];sv();location.reload()}}catch(e){alert('Archivo no válido')}};
+$('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text());if(confirm('Esto reemplaza los datos actuales. ¿Continuar?')){S=j.S||{};E=j.E||[];if(j.K){try{localStorage.setItem('rj_k',j.K)}catch(e){}}sv();location.reload()}}catch(e){alert('Archivo no válido')}};
 $('cp').onclick=async()=>{let t='Fecha;Inicio;Fin;Pausa min;Horas;Nocturnas;Inicio empresa;Fin empresa;Km;Notas\n';D.rows.forEach(r=>t+=[r.d,r.s,r.e,r.b,h(r.w),h(r.nt),r.cs||'',r.ce||'',r.k,(r.n||'').replace(/[\n;]/g,' ')].join(';')+'\n');
  try{await navigator.clipboard.writeText(t);alert('Copiado.')}catch(e){prompt('Copia este texto:',t)}};
 $('dall').onclick=()=>{if(E.length&&confirm('¿Borrar TODOS los turnos? No se puede deshacer.')){E=[];sv();$('dm').innerHTML='';render()}};
