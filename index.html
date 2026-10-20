@@ -16,12 +16,25 @@ button.s{background:var(--bd);color:var(--tx)}button.x{background:none;color:var
 .bad{color:var(--bad);font-weight:600}.ok{color:var(--ok)}.m{color:var(--mut);font-size:.8rem}.big{font-size:1.4rem;font-weight:700}
 .ai{white-space:pre-wrap;margin-top:8px;padding:10px;border-left:3px solid var(--ac);background:var(--bg);border-radius:6px}
 details summary{font-weight:700;cursor:pointer}
+button.go{background:var(--ok)}button.stop{background:var(--bad)}button a{color:inherit}
 @media print{.np{display:none!important}body{background:#fff;color:#000}.c{border:0}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head><body>
 <h1>🚚 Mi registro de jornada</h1>
-<div class="c m">Apunta cada día tus horas reales y las que la empresa te reconoce. Todo se guarda solo en este navegador (haz copia de seguridad abajo). Es una herramienta de apoyo, no asesoramiento legal.</div>
+<div class="c m">Apunta cada día tus horas reales y las que la empresa te reconoce. Los turnos se guardan en este móvil (haz copia de seguridad abajo). Las fotos y vídeos de prueba se guardan aquí y, si conectas Google Drive, también se suben solos. Es una herramienta de apoyo, no asesoramiento legal.</div>
+
+
+<div class="c np"><h2>⏱ Turno</h2>
+<div id="lv" class="m"></div>
+<div id="lvf" hidden><div class="g" style="margin-top:8px"><div><label>Pausa (min)</label><input id="lb" type="number" value="0"></div><div><label>Kilómetros</label><input id="lk" type="number"></div><div class="full"><label>Notas</label><input id="ln"></div></div></div>
+<button id="g1" class="go">▶ Iniciar turno</button><button id="g2" class="stop" hidden>⏹ Finalizar turno</button><button id="g3" class="s" hidden>Descartar turno</button>
+<div id="lm" class="m" style="margin-top:6px"></div></div>
+
+<div class="c np"><h2>📎 Pruebas de la app de fichaje</h2>
+<div class="m">Sube la foto o el vídeo de la app real de la empresa, con tu hora de entrada o salida a la vista. Se guardan en este móvil y, si tienes Drive conectado, se suben solos.</div>
+<div class="g" style="margin-top:8px"><div><label>Fecha de la prueba</label><input id="evd" type="date"></div><div><label>Foto o vídeo</label><input id="evf" type="file" accept="image/*,video/*" multiple></div></div>
+<button id="evp" class="s" hidden></button><div id="evs" class="m"></div><div id="evl"></div></div>
 
 <details class="c np"><summary>⚙️ IA (Gemini) y lectura del contrato</summary>
 <div class="g" style="margin-top:8px">
@@ -40,6 +53,17 @@ gemini-3.5-flash-lite</textarea></div>
 <button id="cr">Leer contrato con IA</button><div id="cst" class="m"></div>
 <div class="m" style="margin-top:6px">Al usar la IA, el contrato y tus turnos se envían a Google. Revisa siempre los datos que rellena.</div>
 </details>
+
+<details class="c np"><summary>☁️ Google Drive (subida automática de pruebas)</summary>
+<div style="margin-top:8px"><label>Client ID de Google (acaba en .apps.googleusercontent.com; no es secreto)</label><input id="gc" autocomplete="off" placeholder="1234-abcd.apps.googleusercontent.com"></div>
+<button id="gcs">Guardar y conectar</button><button class="s" id="gcd">Desconectar</button>
+<div id="gst" class="m"></div>
+<div class="m">Los archivos van a una carpeta «Registro jornada» de tu Drive. La app solo puede ver lo que ella misma sube.</div></details>
+
+<div class="c np"><h2>👤 Mis datos (salen en el PDF)</h2><div class="g">
+<div class="full"><label>Nombre y apellidos</label><input id="pn" autocomplete="name"></div>
+<div><label>DNI</label><input id="pd" autocomplete="off"></div>
+<div><label>Fecha de nacimiento</label><input id="pb" type="date"></div></div></div>
 
 <div class="c np"><h2>1. Mi contrato y mi sueldo</h2>
 <div class="g">
@@ -69,7 +93,7 @@ gemini-3.5-flash-lite</textarea></div>
 <div><label>Fin según empresa</label><input id="ce" type="time"></div>
 <div class="full"><label>Notas (esperas, cargas, ¿foto de la app hecha?…)</label><textarea id="n" rows="2"></textarea></div>
 </div>
-<button id="add">Guardar turno</button>
+<button id="add">Guardar turno</button><button id="cx" class="s" hidden>Cancelar edición</button>
 <div id="dm"></div></div>
 
 <div class="c"><h2>3. Resumen</h2>
@@ -88,7 +112,8 @@ gemini-3.5-flash-lite</textarea></div>
 
 <div class="c np"><h2>6. Copia de seguridad</h2>
 <button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="cp">Copiar CSV</button><button class="s" id="dall">Borrar todos los turnos</button>
-<input id="imf" type="file" accept=".json" hidden></div>
+<input id="imf" type="file" accept=".json" hidden>
+<div class="m" style="margin-top:6px">La copia JSON guarda turnos, ubicaciones y datos, pero no las fotos y vídeos: esos viven en este móvil y en Drive.</div></div>
 
 <div class="c m"><b>Referencia (Estatuto de los Trabajadores; verifica con tu convenio):</b> jornada diaria ordinaria máx. 9 h salvo pacto (art. 34.3); 12 h de descanso entre jornadas (34.3); pausa de 15 min si pasas de 6 h (34.4); registro diario de jornada, que la empresa conserva 4 años (34.9). Horas extra: se pagan al menos como la hora normal o se compensan con descanso en 4 meses, máx. 80 al año (art. 35). Nocturnidad: de 22:00 a 6:00; es trabajador nocturno quien hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya se fijara contando la nocturnidad (art. 36). Descanso semanal: 1,5 días seguidos (art. 37). Las reclamaciones de cantidades prescriben en general al año (art. 59). El transporte por carretera tiene reglas especiales (RD 1561/1995 y convenio), por ejemplo en tiempos de espera o presencia: consúltalo con un sindicato o abogado laboralista.</div>
 
@@ -98,9 +123,12 @@ let S={},E=[],D={};
 try{S=JSON.parse(localStorage.getItem('rj_s')||'{}');E=JSON.parse(localStorage.getItem('rj_e')||'[]')}catch(e){}
 const getK=()=>{try{return localStorage.getItem('rj_k')||''}catch(e){return ''}};
 const sv=()=>{try{localStorage.setItem('rj_s',JSON.stringify(S));localStorage.setItem('rj_e',JSON.stringify(E))}catch(e){alert('Este navegador no deja guardar datos.')}};
-['wk','dy','bs','pp','ah','ex','np','cn','fi','ct','pv'].forEach(f=>{if(S[f]!==undefined)$(f).value=S[f];$(f).oninput=()=>{S[f]=$(f).value;sv();render()}});
+['wk','dy','bs','pp','ah','ex','np','cn','fi','ct','pv','pn','pd','pb'].forEach(f=>{if(S[f]!==undefined)$(f).value=S[f];$(f).oninput=()=>{S[f]=$(f).value;sv();render()}});
 if(S.md)$('md').value=S.md;$('md').oninput=()=>{S.md=$('md').value;sv()};
-$('d').value=new Date().toISOString().slice(0,10);$('rm').value=$('d').value.slice(0,7);
+const todayS=()=>{const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')};
+const nowHM=()=>{const t=new Date();return String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')};
+S.ev=S.ev||[];
+$('d').value=todayS();$('rm').value=$('d').value.slice(0,7);
 const tm=t=>{const[a,b]=t.split(':');return +a*60+ +b};
 const dur=(s,e)=>{let a=tm(s),z=tm(e);if(z<=a)z+=1440;return[a,z]};
 const night=(a,z)=>{let t=0;for(const[x,y]of[[0,360],[1320,1800],[2760,3240]])t+=Math.max(0,Math.min(z,y)-Math.max(a,x));return t};
@@ -139,7 +167,8 @@ function render(){
  ws.forEach(o=>{const x=M[o.k.slice(0,7)];if(x){x.ex+=o.extra;x.eE+=o.eE;x.eN+=o.eN}});
  $('mot').innerHTML=ws.length?`<table><tr><th>Mes</th><th>Trabajadas</th><th>Extra</th><th>Nocturnas</th><th>No reconoc.</th><th>Km</th><th>€ extra</th><th>€ noct.</th><th>Total €</th></tr>${Object.keys(M).sort().map(k=>{const o=M[k];return`<tr><td>${k.slice(5)}/${k.slice(0,4)}</td><td>${h(o.w)}</td><td>${h(o.ex)}</td><td>${h(o.nt)}</td><td>${o.hp?h(o.hp-o.paid):'–'}</td><td>${o.km}</td><td>${o.eE?eur(o.eE):'–'}</td><td>${o.eN?eur(o.eN):'–'}</td><td><b>${o.eE+o.eN?eur(o.eE+o.eN):'–'}</b></td></tr>`}).join('')}</table><div class="m">Las horas extra de cada semana se cuentan en el mes en que empieza la semana.</div>`:'';
  $('tot').innerHTML=ws.length?`<div class="big bad">${h(tE)} extra</div><div>${h(tN)} nocturnas · ${h(tU)} no reconocidas por la empresa · horas extra este año: <b class="${yr>4800?'bad':''}">${h(yr)}</b> de 80 h permitidas${mo?`<div style="margin-top:6px">Te corresponderían ≈ <b>${eur(tEE)}</b> por horas extra${np?` + <b>${eur(tNN)}</b> de nocturnidad`:' (nocturnidad: pon el % de tu convenio para calcularla)'} = <b class="bad">${eur(tEE+tNN)}</b> <span class="m">estimación orientativa</span></div>`:''}`:'';
- $('lst').innerHTML=rows.length?`<table><tr><th></th><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Avisos</th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc(r.n)}"><td><button class="x" onclick="del(${r.id})">🗑 Borrar</button></td><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td class="bad">${r.al.join(', ')}</td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
+ $('lst').innerHTML=rows.length?`<table><tr><th></th><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Lugar (entrada → salida)</th><th>Pruebas</th><th>Avisos</th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc(r.n)}"><td><button class="x" onclick="ed(${r.id})">✏️</button><button class="x" onclick="del(${r.id})">🗑</button></td><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td>${shortLoc(r.ls)} → ${shortLoc(r.le)}</td><td>${nEv(r.d)?'📎'+nEv(r.d):'–'}</td><td class="bad">${r.al.join(', ')}</td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
+ renderEv();
 }
 window.del=id=>{if(confirm('¿Borrar este turno?')){E=E.filter(x=>x.id!==id);sv();render()}};
 
@@ -220,10 +249,15 @@ function turnLocal(r){let t=`${h(r.w)} trabajadas`;
  if(r.nt)t+=`. Horas nocturnas (22:00–6:00): <b>${h(r.nt)}</b>${r.nt>=180?' → ese día cuentas como trabajador nocturno':''}${D.np&&D.rt?` → plus ≈ <b>${eur(r.nt/60*D.rt*D.np)}</b>`:' (el importe del plus lo fija tu convenio; pon el % si consta)'}`;
  else t+='. Horas nocturnas: ninguna';
  return t+'. <span class="m">Cuenta como extra lo que pasa de tu jornada diaria o de tus horas semanales (lo que sea mayor).</span>'+(r.al.length?`<div class="bad">Avisos: ${r.al.join(', ')}</div>`:'')}
+let EDIT=null;
+function resetForm(){EDIT=null;['s','e','k','cs','ce','n'].forEach(i=>$(i).value='');$('add').textContent='Guardar turno';$('cx').hidden=true}
+window.ed=id=>{const x=E.find(v=>v.id===id);if(!x)return;EDIT=id;['d','s','e','b','k','cs','ce','n'].forEach(f=>$(f).value=x[f]??'');$('add').textContent='Guardar cambios';$('cx').hidden=false;$('d').scrollIntoView({behavior:'smooth',block:'center'})};
+$('cx').onclick=resetForm;
 $('add').onclick=async()=>{
  if(!$('d').value||!$('s').value||!$('e').value){alert('Pon al menos fecha, inicio y fin.');return}
- const id=Date.now();E.push({id,d:$('d').value,s:$('s').value,e:$('e').value,b:+$('b').value||0,k:+$('k').value||0,cs:$('cs').value,ce:$('ce').value,n:$('n').value});
- ['s','e','k','cs','ce','n'].forEach(i=>$(i).value='');sv();render();
+ const v={d:$('d').value,s:$('s').value,e:$('e').value,b:+$('b').value||0,k:+$('k').value||0,cs:$('cs').value,ce:$('ce').value,n:$('n').value};
+ let id;if(EDIT){id=EDIT;const i=E.findIndex(x=>x.id===id);E[i]={...E[i],...v}}else{id=Date.now();E.push({id,...v})}
+ resetForm();sv();render();
  const r=D.rows.find(x=>x.id===id);if(!r)return;const dm=$('dm');dm.innerHTML='<b>Este turno:</b> '+turnLocal(r);
  if(!getK()){dm.innerHTML+='<div class="m">Añade tu clave de Gemini (⚙️) para que la IA analice cada turno con la ley.</div>';return}
  dm.innerHTML+='<div class="ai">Consultando a la IA…</div>';
@@ -266,6 +300,7 @@ async function makePDF(m){
  const doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});let y=44;
  const line=(txt,sz,b)=>{doc.setFontSize(sz||10);doc.setFont('helvetica',b?'bold':'normal');for(const l of doc.splitTextToSize(lat(txt),515)){if(y>790){doc.addPage();y=44}doc.text(l,40,y);y+=(sz||10)+3}};
  line('Registro de jornada - '+d.label,16,1);y+=4;
+ if(S.pn||S.pd||S.pb)line('Trabajador: '+(S.pn||'-')+'    DNI: '+(S.pd||'-')+(S.pb?'    Fecha de nacimiento: '+S.pb.slice(8)+'/'+S.pb.slice(5,7)+'/'+S.pb.slice(0,4):''),10,1);
  line('Generado el '+new Date().toLocaleDateString('es-ES')+'. Datos apuntados por el trabajador.',9);y+=6;
  contractLines().forEach(l=>line(l,10));y+=6;
  line('RESUMEN',12,1);
@@ -273,13 +308,16 @@ async function makePDF(m){
  if(d.t.hp)line('Horas trabajadas que la empresa no reconoce (segun su registro): '+h(d.t.un)+'.',10);
  if(D.mo)line('Importe estimado que correspondería: horas extra '+eur(d.t.eE)+' + nocturnidad '+eur(d.t.eN)+' = '+eur(d.t.eE+d.t.eN)+' (estimacion orientativa, sujeta a revision del convenio).',10,1);
  y+=6;
+ line('FICHAJES CON HORA Y UBICACION',12,1);
+ doc.autoTable({startY:y,theme:'grid',styles:{fontSize:7.5,font:'helvetica'},headStyles:{fillColor:[29,95,209]},columnStyles:{2:{cellWidth:150},4:{cellWidth:150}},head:[['Fecha','Hora entrada','Ubicacion entrada','Hora salida','Ubicacion salida','Pruebas']],body:d.rows.map(r=>[r.d.slice(8)+'/'+r.d.slice(5,7)+'/'+r.d.slice(0,4),r.s,lat(pt(r.ls)),r.e,lat(pt(r.le)),nEv(r.d)||'-'])});
+ y=doc.lastAutoTable.finalY+14;
  doc.autoTable({startY:y,theme:'grid',styles:{fontSize:8,font:'helvetica'},headStyles:{fillColor:[29,95,209]},head:[['Semana (lunes)','Dias','Trabajadas','Extra','Nocturnas','No reconoc.','Km','EUR extra','EUR noct.','Avisos']],body:d.ws.map(o=>[fd(o.k),o.days,h(o.w),h(o.extra),h(o.nt),o.hp?h(o.un):'-',o.km,o.eE?o.eE.toFixed(2):'-',o.eN?o.eN.toFixed(2):'-',lat(o.al.join(', '))])});
  y=doc.lastAutoTable.finalY+14;
  doc.autoTable({startY:y,theme:'grid',styles:{fontSize:7.5,font:'helvetica'},headStyles:{fillColor:[29,95,209]},head:[['Fecha','Real (mi registro)','Pausa','Horas','Noct.','Empresa (su registro)','Horas empresa','Diferencia','Km','Notas / avisos']],body:d.rows.map(r=>[r.d.slice(8)+'/'+r.d.slice(5,7)+'/'+r.d.slice(0,4),r.s+'-'+r.e,r.b+' min',h(r.w),r.nt?h(r.nt):'-',r.cs?r.cs+'-'+r.ce:'-',r.paid!==null?h(r.paid):'-',r.paid!==null?h(r.w-r.paid):'-',r.k,lat([r.n,r.al.join(', ')].filter(Boolean).join(' | '))])});
  y=doc.lastAutoTable.finalY+16;
  if(window._rep&&(window._rep.m===m||!m)&&window._rep.t){line('INFORME DE LA IA ('+window._rep.m.slice(5)+'/'+window._rep.m.slice(0,4)+')',12,1);window._rep.t.split('\n').forEach(l=>line(l||' ',9))}
  else line('Informe de la IA: no generado para este periodo.',9);
- y+=8;line('Documento orientativo elaborado con registros propios del trabajador (incluidas capturas de la aplicacion de fichaje de la empresa). No es asesoramiento juridico: revisar con un sindicato o abogado laboralista.',8);
+ y+=8;line('Las horas y coordenadas de entrada y salida marcadas con GPS se registraron en el momento de pulsar iniciar y finalizar turno, con la hora y la ubicacion del movil del trabajador. Las fotos y videos de la aplicacion de fichaje de la empresa se conservan como prueba (columna Pruebas).',8);y+=4;line('Documento orientativo elaborado con registros propios del trabajador (incluidas capturas de la aplicacion de fichaje de la empresa). No es asesoramiento juridico: revisar con un sindicato o abogado laboralista.',8);
  await deliver(doc.output('blob'),'informe-jornada-'+(m||'completo')+'.pdf')}
 async function makeTXT(m){
  const d=repData(m);if(!d.rows.length){alert('No hay turnos en ese periodo.');return}
@@ -290,6 +328,87 @@ async function makeTXT(m){
 $('pr').onclick=()=>makePDF('');
 $('pm').onclick=()=>makePDF($('rm').value);
 $('tm').onclick=()=>makeTXT($('rm').value);
+
+
+/* ---------- ubicación, turno en directo ---------- */
+const pt=m=>!m?'manual (sin GPS)':m.lat===undefined?'sin ubicacion':(m.pl?m.pl+' ':'')+'('+m.lat.toFixed(5)+', '+m.lon.toFixed(5)+(m.acc?' +-'+m.acc+' m':'')+')';
+const shortLoc=m=>!m?'–':m.lat===undefined?'⚠️':'<a href="https://maps.google.com/?q='+m.lat+','+m.lon+'" target="_blank" rel="noopener">📍'+esc(m.pl||m.lat.toFixed(3)+', '+m.lon.toFixed(3))+'</a>';
+const nEv=d=>(S.ev||[]).filter(m=>m.d===d).length;
+const getPos=()=>new Promise(res=>{if(!navigator.geolocation)return res({err:'Este navegador no tiene GPS.'});
+ navigator.geolocation.getCurrentPosition(p=>res({lat:+p.coords.latitude.toFixed(6),lon:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)}),
+  e=>res({err:e.code===1?'Permiso de ubicación denegado (iPhone: Ajustes > Privacidad > Localización > Safari).':'No se pudo obtener la ubicación.'}),{enableHighAccuracy:true,timeout:20000,maximumAge:0})});
+const geoName=async p=>{try{const ac=new AbortController();setTimeout(()=>ac.abort(),8000);
+ const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=es&lat='+p.lat+'&lon='+p.lon,{signal:ac.signal});
+ const a=(await r.json()).address||{};const z=a.industrial||a.neighbourhood||a.suburb||a.quarter||a.city_district||'',c=a.city||a.town||a.village||a.municipality||'';
+ return [...new Set([z,c].filter(Boolean))].join(', ')||null}catch(e){return null}};
+async function mark(ts){const p=await getPos();const o={ts};if(p.err){o.err=p.err;return o}Object.assign(o,p);o.pl=await geoName(p);return o}
+function liveUI(){const c=S.cur;$('g1').hidden=!!c;$('g2').hidden=!c;$('g3').hidden=!c;$('lvf').hidden=!c;
+ $('lv').innerHTML=c?`<span class="big ok">Turno en curso</span><br>Desde las <b>${c.s}</b> (${fd(c.d)}) · ${c.ls.lat!==undefined?'📍 '+esc(pt(c.ls)):'⚠️ sin ubicación'} · lleva <b>${h((Date.now()-c.ls.ts)/60000)}</b>`:'Pulsa al empezar a trabajar: guarda la hora y dónde estás.'}
+setInterval(()=>{if(S.cur)liveUI()},30000);
+$('g1').onclick=async()=>{const ts=Date.now(),d=todayS(),hm=nowHM();$('g1').disabled=true;$('lm').textContent='Hora guardada. Obteniendo ubicación…';
+ const m=await mark(ts);S.cur={d,s:hm,ls:m};sv();$('g1').disabled=false;liveUI();
+ $('lm').innerHTML=m.err?'<span class="bad">Turno iniciado a las '+hm+', pero sin ubicación: '+esc(m.err)+'</span>':'<span class="ok">Turno iniciado a las '+hm+'.</span>'};
+$('g2').onclick=async()=>{const c=S.cur;if(!c)return;const ts=Date.now(),hm=nowHM();
+ if(ts-c.ls.ts<60000){alert('Acabas de iniciar el turno. Espera un minuto o pulsa «Descartar turno».');return}
+ if(ts-c.ls.ts>20*3600e3&&!confirm('Este turno lleva más de 20 horas abierto. Si te olvidaste de finalizarlo, descártalo y añádelo a mano. ¿Finalizar ahora de todos modos?'))return;
+ $('g2').disabled=true;$('lm').textContent='Hora guardada. Obteniendo ubicación…';
+ const m=await mark(ts);const id=Date.now();
+ E.push({id,d:c.d,s:c.s,e:hm,b:+$('lb').value||0,k:+$('lk').value||0,cs:'',ce:'',n:$('ln').value,ls:c.ls,le:m});
+ S.cur=null;['lb','lk','ln'].forEach(i=>$(i).value=i==='lb'?0:'');sv();$('g2').disabled=false;render();liveUI();
+ const r=D.rows.find(x=>x.id===id);$('lm').innerHTML=(m.err?'<div class="bad">Turno guardado, pero la salida quedó sin ubicación: '+esc(m.err)+'</div>':'')+'<b>Turno guardado:</b> '+(r?turnLocal(r):'')};
+$('g3').onclick=()=>{if(confirm('¿Descartar el turno en curso? No se guardará.')){S.cur=null;sv();liveUI();$('lm').textContent=''}};
+async function fillPlaces(){const ms=[];E.forEach(x=>[x.ls,x.le].forEach(m=>{if(m&&m.lat!==undefined&&!m.pl)ms.push(m)}));if(S.cur&&S.cur.ls&&S.cur.ls.lat!==undefined&&!S.cur.ls.pl)ms.push(S.cur.ls);
+ for(const m of ms){const n=await geoName(m);if(n){m.pl=n;sv();render();liveUI()}await new Promise(r=>setTimeout(r,1100))}}
+window.addEventListener('online',fillPlaces);
+
+/* ---------- pruebas (IndexedDB) + Google Drive ---------- */
+const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('rj',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const idbPut=async(k,v)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})};
+const idbGet=async k=>{const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('f').objectStore('f').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})};
+const idbDel=async k=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})};
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+$('evd').value=todayS();
+function renderEv(){const L=(S.ev||[]).slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.ts-a.ts);
+ $('evl').innerHTML=L.length?L.map(m=>`<div style="border-top:1px solid var(--bd);padding:6px 0"><b>${fd(m.d)}</b> · ${esc(m.name)} <span class="m">(${(m.size/1048576).toFixed(1)} MB${m.hh?' · sha256 '+m.hh.slice(0,10):''})</span><br>${m.drive?'<span class="ok">✅ En Drive</span> <a href="'+esc(m.drive.link||'#')+'" target="_blank" rel="noopener">ver</a>':'<span class="bad">⏳ Solo en este móvil</span>'} <button class="s" onclick="evShare(\''+m.id+'\')">Compartir / guardar</button><button class="x" onclick="evDel(\''+m.id+'\')">🗑</button></div>`).join(''):'<span class="m">Aún no hay pruebas.</span>';
+ const p=(S.ev||[]).filter(m=>!m.drive).length;$('evp').hidden=!p||!S.gcid;$('evp').textContent='☁️ Subir '+p+' pendiente(s) a Drive'}
+window.evShare=async id=>{const m=S.ev.find(x=>x.id===id);const b=await idbGet(id);if(!b){alert('Archivo no encontrado en este móvil.');return}deliver(b,m.name)};
+window.evDel=async id=>{const m=S.ev.find(x=>x.id===id);if(!m||!confirm('¿Borrar «'+m.name+'» de este móvil?'+(m.drive?' La copia de Drive no se borra.':' Aún NO está en Drive.')))return;
+ await idbDel(id).catch(()=>{});S.ev=S.ev.filter(x=>x.id!==id);sv();render()};
+$('evf').onchange=async()=>{const d=$('evd').value||todayS(),fs=[...$('evf').files];$('evf').value='';
+ for(const f of fs){const id='e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  try{await idbPut(id,f)}catch(e){alert('No se pudo guardar «'+f.name+'» en el móvil: '+e.message);continue}
+  let hh=null;if(f.size<80e6){try{hh=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await f.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){}}
+  S.ev.push({id,d,name:f.name||'archivo',type:f.type,size:f.size,ts:f.lastModified||Date.now(),hh,drive:null});sv();render()}
+ if(S.gcid)syncEv()};
+let TOK=null,TEXP=0,syncing=false;
+const loadGIS=()=>new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=res;sc.onerror=()=>rej(new Error('No se pudo cargar Google (¿sin internet?).'));document.head.appendChild(sc)});
+function token(){if(TOK&&Date.now()<TEXP)return Promise.resolve(TOK);if(!S.gcid)return Promise.reject(new Error('Falta el Client ID de Google (☁️ arriba).'));
+ return loadGIS().then(()=>new Promise((res,rej)=>{const c=google.accounts.oauth2.initTokenClient({client_id:S.gcid,scope:'https://www.googleapis.com/auth/drive.file',
+  callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));TOK=r.access_token;TEXP=Date.now()+(r.expires_in-60)*1000;S.gok=1;sv();res(TOK)},
+  error_callback:e=>rej(new Error(e.type==='popup_failed_to_open'?'El navegador bloqueó la ventana de Google. Toca «Subir pendientes».':e.type==='popup_closed'?'Cerraste la ventana de Google.':(e.message||e.type)))});
+  c.requestAccessToken({prompt:S.gok?'':'consent'})}))}
+const gerr=async r=>{const j=await r.json().catch(()=>({}));return new Error((j.error&&(j.error.message||j.error))||('Error '+r.status))};
+async function fid(t){if(S.dfid)return S.dfid;const H={Authorization:'Bearer '+t};
+ const q=encodeURIComponent("name='Registro jornada' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+ let r=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)',{headers:H});if(!r.ok)throw await gerr(r);let j=await r.json();
+ if(j.files&&j.files[0])S.dfid=j.files[0].id;else{r=await fetch('https://www.googleapis.com/drive/v3/files?fields=id',{method:'POST',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify({name:'Registro jornada',mimeType:'application/vnd.google-apps.folder'})});if(!r.ok)throw await gerr(r);S.dfid=(await r.json()).id}
+ sv();return S.dfid}
+async function drUp(t,m){const b=await idbGet(m.id);if(!b)throw new Error('«'+m.name+'» ya no está en este móvil.');const f=await fid(t);
+ const hm=new Date(m.ts).toTimeString().slice(0,5).replace(':','');const name=m.d+'_'+hm+'_'+m.name.replace(/[^\w.\-]+/g,'_');const ty=b.type||m.type||'application/octet-stream';
+ const i=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':ty},body:JSON.stringify({name,parents:[f],description:'Prueba de fichaje del '+m.d+(m.hh?' · sha256 '+m.hh:'')})});
+ if(i.status===404){S.dfid='';sv()}if(!i.ok)throw await gerr(i);const loc=i.headers.get('Location');if(!loc)throw new Error('Drive no devolvió la dirección de subida.');
+ const u=await fetch(loc,{method:'PUT',headers:{'Content-Type':ty},body:b});if(!u.ok)throw await gerr(u);const j=await u.json();m.drive={id:j.id,link:j.webViewLink||''}}
+async function syncEv(){if(syncing||!S.gcid)return;const P=S.ev.filter(m=>!m.drive);if(!P.length)return;syncing=true;const st=$('evs');
+ try{const t=await token();for(const m of P){st.textContent='Subiendo '+m.name+'…';await drUp(t,m);sv();renderEv()}st.innerHTML='<span class="ok">✅ Todo subido a Drive.</span>'}
+ catch(e){st.innerHTML='<span class="bad">No se pudo subir: '+esc(e.message)+'</span> Toca «Subir pendientes» para reintentar.'}
+ syncing=false}
+$('evp').onclick=syncEv;
+const driveUI=()=>{$('gc').value=S.gcid||'';$('gst').innerHTML=!S.gcid?'Sin configurar.':S.gok?'<span class="ok">✅ Conectado.</span>':'Client ID guardado. Toca «Guardar y conectar».'};
+$('gcs').onclick=async()=>{const v=$('gc').value.trim();if(!/\.apps\.googleusercontent\.com$/.test(v)){$('gst').innerHTML='<span class="bad">El Client ID debe acabar en .apps.googleusercontent.com</span>';return}
+ S.gcid=v;S.gok=0;S.dfid='';TOK=null;sv();$('gst').textContent='Conectando…';
+ try{const t=await token();await fid(t);driveUI();$('gst').innerHTML+=' Carpeta «Registro jornada» lista.';renderEv();syncEv()}catch(e){$('gst').innerHTML='<span class="bad">'+esc(e.message)+'</span>'}};
+$('gcd').onclick=()=>{S.gcid='';S.gok=0;S.dfid='';TOK=null;sv();driveUI();renderEv()};
+driveUI();liveUI();fillPlaces();
 
 render();
 </script></body></html>
