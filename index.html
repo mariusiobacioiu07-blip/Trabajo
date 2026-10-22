@@ -415,15 +415,21 @@ $('evf').onchange=async()=>{const d=$('evd').value||todayS(),fs=[...$('evf').fil
   try{await idbPut(id,f)}catch(e){alert('No se pudo guardar «'+f.name+'» en el móvil: '+e.message);continue}
   let hh=null;if(f.size<80e6){try{hh=[...new Uint8Array(await crypto.subtle.digest('SHA-256',await f.arrayBuffer()))].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){}}
   S.ev.push({id,d,name:f.name||'archivo',type:f.type,size:f.size,ts:f.lastModified||Date.now(),hh,drive:null});sv();render()}
- if(S.gcid)syncEv()};
+ if(S.gcid){if(hasTok())syncEv();else{$('evs').innerHTML='Fotos guardadas. Toca «☁️ Subir pendientes» para conectar con Google y subirlas.'}}};
 let TOK=null,TEXP=0,syncing=false;
 const loadGIS=()=>new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=res;sc.onerror=()=>rej(new Error('No se pudo cargar Google (¿sin internet?).'));document.head.appendChild(sc)});
-function token(){if(TOK&&Date.now()<TEXP)return Promise.resolve(TOK);if(!S.gcid)return Promise.reject(new Error('Falta el Client ID de Google (☁️ arriba).'));
+function loadTok(){try{const o=JSON.parse(localStorage.getItem('rj_tok')||'null');if(o&&o.t&&Date.now()<o.e){TOK=o.t;TEXP=o.e}}catch(e){}}
+function clearTok(){TOK=null;TEXP=0;try{localStorage.removeItem('rj_tok')}catch(e){}}
+function hasTok(){if(!(TOK&&Date.now()<TEXP))loadTok();return !!(TOK&&Date.now()<TEXP)}
+function token(){if(hasTok())return Promise.resolve(TOK);if(!S.gcid)return Promise.reject(new Error('Falta el Client ID de Google (☁️ arriba).'));
  return loadGIS().then(()=>new Promise((res,rej)=>{const c=google.accounts.oauth2.initTokenClient({client_id:S.gcid,scope:'https://www.googleapis.com/auth/drive.file',
-  callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));TOK=r.access_token;TEXP=Date.now()+(r.expires_in-60)*1000;S.gok=1;sv();res(TOK)},
+  hint:S.gem||undefined,
+  callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));TOK=r.access_token;TEXP=Date.now()+(r.expires_in-60)*1000;S.gok=1;sv();try{localStorage.setItem('rj_tok',JSON.stringify({t:TOK,e:TEXP}))}catch(e){}
+   if(!S.gem)fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)',{headers:{Authorization:'Bearer '+TOK}}).then(x=>x.json()).then(j=>{if(j.user&&j.user.emailAddress){S.gem=j.user.emailAddress;sv()}}).catch(()=>{});
+   res(TOK)},
   error_callback:e=>rej(new Error(e.type==='popup_failed_to_open'?'El navegador bloqueó la ventana de Google. Toca «Subir pendientes».':e.type==='popup_closed'?'Cerraste la ventana de Google.':(e.message||e.type)))});
   c.requestAccessToken({prompt:S.gok?'':'consent'})}))}
-const gerr=async r=>{const j=await r.json().catch(()=>({}));return new Error((j.error&&(j.error.message||j.error))||('Error '+r.status))};
+const gerr=async r=>{if(r.status===401)clearTok();const j=await r.json().catch(()=>({}));return new Error((j.error&&(j.error.message||j.error))||('Error '+r.status))};
 async function fid(t){if(S.dfid)return S.dfid;const H={Authorization:'Bearer '+t};
  const q=encodeURIComponent("name='Registro jornada' and mimeType='application/vnd.google-apps.folder' and trashed=false");
  let r=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)',{headers:H});if(!r.ok)throw await gerr(r);let j=await r.json();
@@ -441,9 +447,9 @@ async function syncEv(){if(syncing||!S.gcid)return;const P=S.ev.filter(m=>!m.dri
 $('evp').onclick=syncEv;
 const driveUI=()=>{$('gc').value=S.gcid||'';$('gst').innerHTML=!S.gcid?'Sin configurar.':S.gok?'<span class="ok">✅ Conectado.</span>':'Client ID guardado. Toca «Guardar y conectar».'};
 $('gcs').onclick=async()=>{const v=$('gc').value.trim();if(!/\.apps\.googleusercontent\.com$/.test(v)){$('gst').innerHTML='<span class="bad">El Client ID debe acabar en .apps.googleusercontent.com</span>';return}
- S.gcid=v;S.gok=0;S.dfid='';TOK=null;sv();$('gst').textContent='Conectando…';
+ S.gcid=v;S.gok=0;S.dfid='';S.gem='';clearTok();sv();$('gst').textContent='Conectando…';
  try{const t=await token();await fid(t);driveUI();$('gst').innerHTML+=' Carpeta «Registro jornada» lista.';renderEv();syncEv()}catch(e){$('gst').innerHTML='<span class="bad">'+esc(e.message)+'</span>'}};
-$('gcd').onclick=()=>{S.gcid='';S.gok=0;S.dfid='';TOK=null;sv();driveUI();renderEv()};
+$('gcd').onclick=()=>{S.gcid='';S.gok=0;S.dfid='';S.gem='';clearTok();sv();driveUI();renderEv()};
 driveUI();liveUI();fillPlaces();
 
 render();
@@ -454,7 +460,7 @@ async function upBlob(t,name,blob,desc){const f=await fid(t),ty='application/pdf
  if(i.status===404){S.dfid='';sv()}if(!i.ok)throw await gerr(i);const loc=i.headers.get('Location');if(!loc)throw new Error('Drive no devolvió la dirección de subida.');
  const u=await fetch(loc,{method:'PUT',headers:{'Content-Type':ty},body:blob});if(!u.ok)throw await gerr(u);return u.json()}
 let autoBusy=false;
-async function autoMonths(manual){if(autoBusy||!S.gcid||(!S.gok&&!manual))return;
+async function autoMonths(manual,g){if(autoBusy||!S.gcid||(!S.gok&&!manual))return;if(!manual&&!g&&!hasTok())return;
  const cur=todayS().slice(0,7);S.pdfd=S.pdfd||{};const st=$('pdst');
  const sig=k=>{const d=repData(k);return d.rows.length+'|'+d.t.w.toFixed(2)};
  const todo=[...new Set(E.map(x=>x.d.slice(0,7)))].filter(k=>k<cur).sort().filter(k=>repData(k).rows.length&&S.pdfd[k]!==sig(k));
@@ -466,6 +472,6 @@ async function autoMonths(manual){if(autoBusy||!S.gcid||(!S.gok&&!manual))return
  catch(e){st.innerHTML='<span class="bad">No se pudo subir el PDF: '+esc(e.message)+'</span> Toca «Subir PDFs de meses cerrados ahora».'}
  autoBusy=false}
 $('pdb').onclick=()=>autoMonths(true);
-document.addEventListener('click',()=>autoMonths(),{once:true});
+document.addEventListener('click',()=>autoMonths(false,true),{once:true});
 autoMonths();
 </script></body></html>
