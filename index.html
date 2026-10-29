@@ -32,7 +32,8 @@ button.go{background:var(--ok)}button.stop{background:var(--bad)}button a{color:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head><body>
 <h1>🚚 Mi registro de jornada</h1>
-<div class="c m">Apunta cada día tus horas reales y las que la empresa te reconoce. Los turnos se guardan en este móvil (haz copia de seguridad abajo). Las fotos y vídeos de prueba se guardan aquí y, si conectas Google Drive, también se suben solos. Es una herramienta de apoyo, no asesoramiento legal.</div>
+<div class="c m">Apunta cada día tus horas reales y las que la empresa te reconoce. Los turnos se guardan en este móvil y, si conectas Google Drive (☁️), también en tu Drive de forma automática. Las fotos y vídeos de prueba también se suben solos a Drive. Es una herramienta de apoyo, no asesoramiento legal.</div>
+<div id="warn" class="np"></div>
 
 
 <div class="c np"><h2>⏱ Turno</h2>
@@ -59,7 +60,7 @@ gemini-3.5-flash-lite</textarea></div>
 <button id="aks">Guardar clave</button><button class="s" id="akd">Borrar clave</button>
 <div id="aks2" class="m"></div>
 <hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">
-<label>Contrato y/o nómina (PDF o foto). Añade los archivos de uno en uno: se van acumulando en la lista</label><input id="cf" type="file" accept="application/pdf,image/*"><div id="fl" class="m"></div>
+<label>Contrato y/o nómina (PDF o foto). Se guardan en este móvil y, con Drive conectado, también en tu Drive</label><input id="cf" type="file" accept="application/pdf,image/*" multiple><div id="fl" class="m"></div>
 <button id="cr">Leer contrato con IA</button><div id="cst" class="m"></div>
 <div class="m" style="margin-top:6px">Al usar la IA, el contrato y tus turnos se envían a Google. Revisa siempre los datos que rellena.</div>
 </details>
@@ -68,7 +69,7 @@ gemini-3.5-flash-lite</textarea></div>
 <div style="margin-top:8px"><label>Client ID de Google (acaba en .apps.googleusercontent.com; no es secreto)</label><input id="gc" autocomplete="off" placeholder="1234-abcd.apps.googleusercontent.com"></div>
 <button id="gcs">Guardar y conectar</button><button class="s" id="gcd">Desconectar</button>
 <div id="gst" class="m"></div>
-<div class="m">Los archivos van a una carpeta «Registro jornada» de tu Drive. La app solo puede ver lo que ella misma sube.</div>
+<div class="m">Los archivos van a una carpeta «Registro jornada» de tu Drive. La app solo puede ver lo que ella misma sube. Con Drive conectado, la app guarda sola una copia de tus turnos y datos en esa carpeta cada vez que cambias algo.</div>
 <div class="m" style="margin-top:8px">Cada mes cerrado, la app sube sola su PDF a Drive la primera vez que la abres el mes siguiente.</div><button class="s" id="pdb">☁️ Subir PDFs de meses cerrados ahora</button><div id="pdst" class="m"></div></details>
 
 <div class="c np"><h2>👤 Mis datos (salen en el PDF)</h2><div class="g">
@@ -122,10 +123,12 @@ gemini-3.5-flash-lite</textarea></div>
 <div class="c np"><h2>5. Turnos</h2><div class="sc" id="lst"></div></div>
 
 <div class="c np"><h2>6. Copia de seguridad</h2>
-<button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="shc">📲 Enviar configuración (IA + Drive)</button><button class="s" id="cp">Copiar CSV</button><button class="s" id="dall">Borrar todos los turnos</button>
+<div id="bks" class="m"></div>
+<button id="ex1">Descargar copia (JSON)</button><button class="s" id="im1">Restaurar copia</button><button class="s" id="drr">☁️ Recuperar desde Drive</button><button class="s" id="shc">📲 Enviar configuración (IA + Drive)</button><button class="s" id="cp">Copiar CSV</button><button class="s" id="dall">Borrar todos los turnos</button>
 <input id="imf" type="file" accept=".json" hidden>
 <div class="m" style="margin-top:6px">«Enviar configuración» crea un enlace con tu clave de Gemini y tu Client ID de Drive para que otra persona lo abra y quede todo puesto. No lleva tus turnos ni tus datos personales. Mándalo solo a gente de confianza: quien tenga el enlace puede usar tu clave de Gemini.</div>
-<div class="m" style="margin-top:6px">La copia JSON guarda todo: turnos, ubicaciones, tus datos, contrato, Client ID de Drive y la clave de Gemini (guárdala en un sitio privado, la clave va dentro). No guarda las fotos y vídeos: esos viven en este móvil y en Drive.</div></div>
+<div class="m" style="margin-top:6px">Restaurar o recuperar <b>no borra nada</b>: añade los turnos que te falten y rellena los datos vacíos.</div>
+<div class="m" style="margin-top:6px">La copia (descargada o la automática de Drive) guarda todo: turnos, ubicaciones, tus datos personales, contrato y sueldo, informes y respuestas de la IA, Client ID de Drive y la clave de Gemini (guárdala en un sitio privado, la clave va dentro). Los archivos (contrato, nómina, fotos y vídeos) se guardan aparte en este móvil y en tu carpeta de Drive; si cambias de móvil, la app los vuelve a bajar de Drive cuando los abres.</div></div>
 
 <div class="c m"><b>Referencia (Estatuto de los Trabajadores; verifica con tu convenio):</b> jornada diaria ordinaria máx. 9 h salvo pacto (art. 34.3); 12 h de descanso entre jornadas (34.3); pausa de 15 min si pasas de 6 h (34.4); registro diario de jornada, que la empresa conserva 4 años (34.9). Horas extra: se pagan al menos como la hora normal o se compensan con descanso en 4 meses, máx. 80 al año (art. 35). Nocturnidad: de 22:00 a 6:00; es trabajador nocturno quien hace 3 h o más en ese horario; el plus lo fija el convenio salvo que el salario ya se fijara contando la nocturnidad (art. 36). Descanso semanal: 1,5 días seguidos (art. 37). Las reclamaciones de cantidades prescriben en general al año (art. 59). El transporte por carretera tiene reglas especiales (RD 1561/1995 y convenio), por ejemplo en tiempos de espera o presencia: consúltalo con un sindicato o abogado laboralista.</div>
 
@@ -134,7 +137,12 @@ const $=id=>document.getElementById(id);
 let S={},E=[],D={};
 try{S=JSON.parse(localStorage.getItem('rj_s')||'{}');E=JSON.parse(localStorage.getItem('rj_e')||'[]')}catch(e){}
 const getK=()=>{try{return localStorage.getItem('rj_k')||''}catch(e){return ''}};
-const sv=()=>{try{localStorage.setItem('rj_s',JSON.stringify(S));localStorage.setItem('rj_e',JSON.stringify(E))}catch(e){alert('Este navegador no deja guardar datos.')}};
+let SVT=null;
+const DK=['pn','pd','pb','wk','dy','bs','pp','fi','ct','pv','ah','ex','np','cn'];
+const hasData=()=>E.length>0||DK.some(k=>S[k]!==undefined&&S[k]!==null&&S[k]!=='')||!!(S.docs||[]).length||!!(S.ev||[]).length||!!S.cur;
+const sv=()=>{try{localStorage.setItem('rj_s',JSON.stringify(S));localStorage.setItem('rj_e',JSON.stringify(E))}catch(e){alert('Este navegador no deja guardar datos.')}
+ try{idbPut('data',{S,E,ts:Date.now()}).catch(()=>{})}catch(e){}  /* copia interna inmediata */
+ clearTimeout(SVT);SVT=setTimeout(afterSave,2500)};
 /* importar configuración compartida (enlace #cfg=...) */
 (()=>{const m=location.hash.match(/^#cfg=(.+)$/);if(!m)return;
  try{const c=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
@@ -189,7 +197,7 @@ function render(){
  ws.forEach(o=>{const x=M[o.k.slice(0,7)];if(x){x.ex+=o.extra;x.eE+=o.eE;x.eN+=o.eN}});
  $('mot').innerHTML=ws.length?`<table><tr><th>Mes</th><th>Trabajadas</th><th>Extra</th><th>Nocturnas</th><th>No reconoc.</th><th>Km</th><th>€ extra</th><th>€ noct.</th><th>Total €</th></tr>${Object.keys(M).sort().map(k=>{const o=M[k];return`<tr><td>${k.slice(5)}/${k.slice(0,4)}</td><td>${h(o.w)}</td><td>${h(o.ex)}</td><td>${h(o.nt)}</td><td>${o.hp?h(o.hp-o.paid):'–'}</td><td>${o.km}</td><td>${o.eE?eur(o.eE):'–'}</td><td>${o.eN?eur(o.eN):'–'}</td><td><b>${o.eE+o.eN?eur(o.eE+o.eN):'–'}</b></td></tr>`}).join('')}</table><div class="m">Las horas extra de cada semana se cuentan en el mes en que empieza la semana.</div>`:'';
  $('tot').innerHTML=ws.length?`<div class="big bad">${h(tE)} extra</div><div>${h(tN)} nocturnas · ${h(tU)} no reconocidas por la empresa · horas extra este año: <b class="${yr>4800?'bad':''}">${h(yr)}</b> de 80 h permitidas${mo?`<div style="margin-top:6px">Te corresponderían ≈ <b>${eur(tEE)}</b> por horas extra${np?` + <b>${eur(tNN)}</b> de nocturnidad`:' (nocturnidad: pon el % de tu convenio para calcularla)'} = <b class="bad">${eur(tEE+tNN)}</b> <span class="m">estimación orientativa</span></div>`:''}`:'';
- $('lst').innerHTML=rows.length?`<table><tr><th></th><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Lugar (entrada → salida)</th><th>Pruebas</th><th>Avisos</th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc(r.n)}"><td><button class="x" onclick="ed(${r.id})">✏️</button><button class="x" onclick="del(${r.id})">🗑</button></td><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td>${shortLoc(r.ls)} → ${shortLoc(r.le)}</td><td>${nEv(r.d)?'📎'+nEv(r.d):'–'}</td><td class="bad">${r.al.join(', ')}</td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
+ $('lst').innerHTML=rows.length?`<table><tr><th></th><th>Fecha</th><th>Real</th><th>Total</th><th>Noct.</th><th>Empresa</th><th>Lugar (entrada → salida)</th><th>Pruebas</th><th>Avisos</th></tr>${rows.slice().reverse().map(r=>`<tr title="${esc([r.n,r.ai].filter(Boolean).join('\n\n'))}"><td><button class="x" onclick="ed(${r.id})">✏️</button><button class="x" onclick="del(${r.id})">🗑</button></td><td>${fd(r.d)}</td><td>${r.s}–${r.e}</td><td>${h(r.w)}</td><td>${r.nt?h(r.nt):'–'}</td><td>${r.cs?r.cs+'–'+r.ce:'–'}</td><td>${shortLoc(r.ls)} → ${shortLoc(r.le)}</td><td>${nEv(r.d)?'📎'+nEv(r.d):'–'}</td><td class="bad">${r.al.join(', ')}</td></tr>`).join('')}</table>`:'<span class="m">Sin turnos.</span>';
  renderEv();
 }
 window.del=id=>{if(confirm('¿Borrar este turno?')){E=E.filter(x=>x.id!==id);sv();render()}};
@@ -219,11 +227,17 @@ const keyUI=()=>{$('aks2').textContent=getK()?'✅ Clave guardada en este navega
 $('aks').onclick=()=>{const v=$('ak').value.trim();if(!v)return;try{localStorage.setItem('rj_k',v)}catch(e){}$('ak').value='';keyUI()};
 $('akd').onclick=()=>{try{localStorage.removeItem('rj_k')}catch(e){}keyUI()};
 const b64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f)});
-const FL=[];
-const showFL=()=>{$('fl').innerHTML=FL.length?'Archivos para leer ('+FL.length+'):<br>'+FL.map((f,i)=>esc(f.name||'archivo')+' <button class="x" onclick="rmf('+i+')">✕</button>').join('<br>')+'<br>Puedes añadir otro con el botón de arriba.':''};
-window.rmf=i=>{FL.splice(i,1);showFL()};
-$('cf').onchange=()=>{for(const f of $('cf').files)FL.push(f);$('cf').value='';showFL()};
-$('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.textContent='Añade primero el PDF o la foto.';return}
+S.docs=S.docs||[];
+const showFL=()=>{const L=S.docs||[];$('fl').innerHTML=L.length?'Documentos guardados ('+L.length+'). La IA lee todos:'+L.map(m=>'<div style="border-top:1px solid var(--bd);padding:4px 0">📄 '+esc(m.name)+' '+(m.drive?'<span class="ok">✅ En Drive</span>':'<span class="bad">⏳ Solo en este móvil</span>')+' <button class="s" style="margin:2px 0" onclick="evShare(\''+m.id+'\')">Ver / guardar</button><button class="x" onclick="rmf(\''+m.id+'\')">🗑</button></div>').join(''):''};
+window.rmf=async id=>{const m=(S.docs||[]).find(x=>x.id===id);if(!m||!confirm('¿Quitar «'+m.name+'» de la app?'+(m.drive?' La copia de Drive no se borra.':' Aún NO está en Drive.')))return;await idbDel(id).catch(()=>{});S.docs=S.docs.filter(x=>x.id!==id);sv();showFL();renderEv()};
+$('cf').onchange=async()=>{const fs=[...$('cf').files];$('cf').value='';
+ for(const f of fs){const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  try{await idbPut(id,f)}catch(e){alert('No se pudo guardar «'+f.name+'» en el móvil: '+e.message);continue}
+  S.docs.push({id,name:f.name||'documento',type:f.type,size:f.size,ts:Date.now(),doc:1,drive:null});sv()}
+ showFL();renderEv();if(S.gcid&&hasTok())syncEv()};
+$('cr').onclick=async()=>{const st=$('cst');if(!(S.docs||[]).length){st.textContent='Añade primero el PDF o la foto.';return}
+ st.textContent='Abriendo documentos…';const fs=[];for(const m of S.docs){try{const b=await getBlob(m);if(b)fs.push(b)}catch(e){}}
+ if(!fs.length){st.textContent='No encuentro los documentos en este móvil ni en Drive. Vuelve a añadirlos.';return}
  st.textContent='Leyendo…';
  try{const q='Te paso mi contrato de trabajo y/o mi nómina (España). REGLA PARA LA NÓMINA: del salario solo quiero el SALARIO BASE y la PRORRATA DE PAGAS EXTRA (lo que paga la empresa por la jornada normal). IGNORA por completo horas extra, dietas, kilometraje, mejoras voluntarias, pluses, antigüedad, complementos y cualquier otro concepto; no los sumes al salario base. Extrae los datos de TODOS los documentos y responde SOLO un JSON con estas claves (usa null si el dato NO aparece escrito en los documentos; no inventes ni calcules salarios): horasSemanales, diasSalarioBase (número de días a los que corresponde el salario base en la nómina, normalmente 30; null si no hay nómina), diasSemana (días de trabajo a la semana), horasDiarias, salarioBaseMensual (€ brutos/mes sin pagas extra, 30 días), salarioAnualBruto, pagasProrrateadasMensual (€/mes; 0 si las pagas extra no están prorrateadas), horasAnuales, precioHoraExtra, plusNocturnidadPorcentaje, plusNocturnidadImporte, salarioRemiteAConvenio (true si el salario se remite a tablas salariales del convenio sin dar cifras), salarioIncluyeNocturnidad (true/false/null), fechaInicio (formato AAAA-MM-DD), tipoContrato, categoria, convenio, provincia (provincia del centro de trabajo o del convenio provincial), resumen (texto breve en español: tipo de jornada, distribución, nocturnidad, horas extra, pausas, cualquier cláusula sobre jornada o salario).';
   const parts=[{text:q}];for(const f of fs)parts.push({inline_data:{mime_type:f.type||'application/pdf',data:await b64(f)}});
@@ -244,7 +258,7 @@ $('cr').onclick=async()=>{const fs=FL.slice(),st=$('cst');if(!fs.length){st.text
   let o='<div class="ok">Lectura terminada. Revísalo con el documento delante:</div>'+L.map(x=>x[1]?'✅ '+esc(x[0])+': <b>'+esc(x[1])+'</b>':'⚠️ '+esc(x[0])+': <b>no consta en el documento</b>').join('<br>');
   if(bs===null)o+='<div class="bad" style="margin-top:6px">No he encontrado el salario.'+(d.salarioRemiteAConvenio?' El contrato lo remite a las tablas salariales del convenio, sin cifras.':'')+' Sube también una nómina (trae el sueldo real) o escríbelo a mano.</div>';
   if(d.salarioIncluyeNocturnidad===true)o+='<div class="bad">Ojo: el documento dice que el salario ya incluye la nocturnidad.</div>';
-  st.innerHTML=o}
+  st.innerHTML=o;S.crt={h:o,ts:Date.now()};sv()}
  catch(e){st.textContent='No se pudo leer: '+e.message}};
 
 $('cvs').onclick=()=>{
@@ -263,7 +277,7 @@ $('sb').onclick=async()=>{const r=$('sres');
   set('ex',ex);set('ah',ah);if(np!==null)set('np',np);else if(ne!==null&&D.rt)set('np',+(ne/D.rt*100).toFixed(1));
   sv();render();
   const src=(window._src||[]).slice(0,5).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.replace(/^https?:\/\//,'').slice(0,60))+'</a>').join('<br>');
-  r.innerHTML='<div class="ai">'+esc(t)+'</div>'+(src?'<div class="m">Fuentes:<br>'+src+'</div>':'')+'<div class="m">Compruébalo con la tabla oficial. Si algo no coincide, corrige el campo a mano.</div>'}
+  r.innerHTML='<div class="ai">'+esc(t)+'</div>'+(src?'<div class="m">Fuentes:<br>'+src+'</div>':'')+'<div class="m">Compruébalo con la tabla oficial. Si algo no coincide, corrige el campo a mano.</div>';S.srt={h:r.innerHTML,ts:Date.now()};sv()}
  catch(e){r.innerHTML='<span class="bad" style="white-space:pre-wrap">No se pudo buscar: '+esc(e.message)+'</span>'}};
 function turnLocal(r){let t=`${h(r.w)} trabajadas`;
  if(r.over)t+=`. Horas de más sobre tu jornada diaria: <b>${h(r.over)}</b>${D.ex?` → te corresponden ≈ <b>${eur(r.over/60*D.ex)}</b>`:' (pon tu salario para ver los euros)'}`;
@@ -284,25 +298,38 @@ $('add').onclick=async()=>{
  if(!getK()){dm.innerHTML+='<div class="m">Añade tu clave de Gemini (⚙️) para que la IA analice cada turno con la ley.</div>';return}
  dm.innerHTML+='<div class="ai">Consultando a la IA…</div>';
  try{const wk=D.W[mon(r.d)];const t=await gem([{text:LEY+'\n\n'+ctx()+`\n\nTURNO: fecha ${r.d}, real ${r.s}-${r.e}, pausa ${r.b} min, ${h(r.w)} trabajadas, ${h(r.nt)} nocturnas, ${h(r.over)} sobre jornada diaria, descanso desde el turno anterior: ${r.rest===null?'n/d':h(r.rest)}, empresa registra ${r.cs?r.cs+'-'+r.ce:'sin dato'}. SEMANA: ${h(wk.w)} trabajadas, ${h(wk.extra)} extra sobre contrato.\n\nExplica en máximo 8 líneas: ¿hay horas nocturnas y qué dice la ley?, ¿hay horas extra?, ¿hay incumplimientos de descanso o jornada?, ¿qué cuantía corresponde con los datos disponibles?`}]);
-  dm.lastChild.textContent=t}catch(e){dm.lastChild.textContent='IA: '+e.message}};
+  dm.lastChild.textContent=t;const x=E.find(v=>v.id===id);if(x){x.ai=t;sv()}}catch(e){dm.lastChild.textContent='IA: '+e.message}};
 
 $('rb').onclick=async()=>{const m=$('rm').value,out=$('rep');out.hidden=false;
  const rows=D.rows.filter(r=>r.d.slice(0,7)===m);if(!rows.length){out.textContent='No hay turnos en ese mes.';return}
  const ws=Object.values(D.W).filter(o=>o.k.slice(0,7)===m);
  const data={dias:rows.map(r=>({fecha:r.d,real:r.s+'-'+r.e,pausaMin:r.b,horas:h(r.w),nocturnas:h(r.nt),empresa:r.cs?r.cs+'-'+r.ce:null,horasReconocidas:r.paid!==null?h(r.paid):null,km:r.k,avisos:r.al})),semanas:ws.map(o=>({lunes:o.k,horas:h(o.w),extra:h(o.extra),nocturnas:h(o.nt),mayorDescansoSeguido:h(o.rest),eurosExtraCalculados:+o.eE.toFixed(2),eurosNocturnoCalculados:+o.eN.toFixed(2)}))};
  out.textContent='Generando informe…';
- try{const rt0=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 0) TOTAL QUE SE LE DEBERÍA (horas extra × precio + nocturnidad si procede, con el desglose y qué cifras son estimación). 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}]);out.textContent=rt0;window._rep={m,t:rt0}}
+ try{const rt0=await gem([{text:LEY+'\n\n'+ctx()+'\n\nDATOS DEL MES '+m+':\n'+JSON.stringify(data)+'\n\nHaz un informe con estas partes (texto plano, títulos en mayúsculas): 0) TOTAL QUE SE LE DEBERÍA (horas extra × precio + nocturnidad si procede, con el desglose y qué cifras son estimación). 1) RESUMEN DEL MES. 2) HORAS EXTRA Y CUÁNTO CORRESPONDE (usa los euros calculados; si el convenio manda, dilo). 3) NOCTURNIDAD (qué dice la ley y qué depende del convenio). 4) DESCANSOS Y LÍMITES INCUMPLIDOS (9 h, 12 h entre jornadas, descanso semanal, 48 h). 5) DIFERENCIA CON LO QUE RECONOCE LA EMPRESA. 6) QUÉ HACER AHORA (conservar capturas, sindicato, Inspección de Trabajo, plazo de un año).'}]);out.textContent=rt0;window._rep={m,t:rt0};S.reps=S.reps||{};S.reps[m]={t:rt0,ts:Date.now()};sv()}
  catch(e){out.textContent='IA: '+e.message}};
 
 /* ---------- copia y exportar ---------- */
-$('ex1').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({S,E,K:getK()})],{type:'application/json'}));a.download='registro-jornada-'+new Date().toISOString().slice(0,10)+'.json';a.click()};
+$('ex1').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({S,E,K:getK()})],{type:'application/json'}));a.download='registro-jornada-'+new Date().toISOString().slice(0,10)+'.json';a.click();const b=bkGet();b.dl=Date.now();bkSet(b);warnUI()};
+/* fusiona una copia con lo que hay: nunca borra turnos locales */
+function mergeIn(j,dry){const bS=(j&&j.S)||{},bE=Array.isArray(j&&j.E)?j.E:[];
+ const ids=new Set(E.map(x=>x.id)),addE=bE.filter(x=>x&&x.id!==undefined&&!ids.has(x.id));
+ const skip=['ev','docs','reps','gok','dfid','cur','gem','pdfd'],emp=v=>v===undefined||v===null||v==='';
+ const fill={};let f=0;for(const k in bS){if(skip.includes(k))continue;if(emp(S[k])&&!emp(bS[k])){fill[k]=bS[k];if(DK.includes(k))f++}}
+ const lists={};let a=0;['ev','docs'].forEach(k=>{if(Array.isArray(bS[k])){const have=new Set((S[k]||[]).map(m=>m.id));lists[k]=bS[k].filter(m=>m&&!have.has(m.id));a+=lists[k].length}});
+ const reps={};if(bS.reps&&typeof bS.reps==='object')for(const m in bS.reps)if(!(S.reps||{})[m]){reps[m]=bS.reps[m];a++}
+ const cur=!S.cur&&bS.cur,key=!!(j&&j.K)&&!getK();
+ if(!dry){E.push(...addE);Object.assign(S,fill);for(const k in lists)S[k]=(S[k]||[]).concat(lists[k]);
+  if(Object.keys(reps).length)S.reps={...(S.reps||{}),...reps};if(cur)S.cur=bS.cur;if(key){try{localStorage.setItem('rj_k',j.K)}catch(e){}}}
+ return {n:addE.length,f,a,any:!!(addE.length||Object.keys(fill).length||a||cur||key)}}
+const rmsg=r=>'Recuperado: '+r.n+' turnos, '+r.f+' datos personales y del contrato'+(r.a?', '+r.a+' documentos, pruebas o informes':'')+'.';
 $('shc').onclick=async()=>{const k=getK();if(!k&&!S.gcid){alert('No tienes guardada ni la clave de Gemini ni el Client ID de Drive.');return}
  const j=JSON.stringify({k:k||'',g:S.gcid||'',m:S.md||''});
  const u=location.origin+location.pathname+'#cfg='+btoa(unescape(encodeURIComponent(j))).replace(/\+/g,'-').replace(/\//g,'_');
  if(navigator.share){try{await navigator.share({title:'Jornadas reales',text:'Abre este enlace en el móvil para dejar la app configurada:',url:u});return}catch(e){if(e&&e.name==='AbortError')return}}
  try{await navigator.clipboard.writeText(u);alert('Enlace copiado. Pégalo en WhatsApp y mándaselo.')}catch(e){prompt('Copia este enlace y mándalo:',u)}};
 $('im1').onclick=()=>$('imf').click();
-$('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text());if(confirm('Esto reemplaza los datos actuales. ¿Continuar?')){S=j.S||{};E=j.E||[];if(j.K){try{localStorage.setItem('rj_k',j.K)}catch(e){}}sv();location.reload()}}catch(e){alert('Archivo no válido')}};
+$('imf').onchange=async()=>{try{const j=JSON.parse(await $('imf').files[0].text());$('imf').value='';const tot=(j.E||[]).length;
+ if(confirm('La copia tiene '+tot+' turnos y tus datos. Se añadirá lo que no tengas y no se borrará nada. ¿Continuar?')){const r=mergeIn(j);sv();alert(rmsg(r));location.reload()}}catch(e){alert('Archivo no válido')}};
 $('cp').onclick=async()=>{let t='Fecha;Inicio;Fin;Pausa min;Horas;Nocturnas;Inicio empresa;Fin empresa;Km;Notas\n';D.rows.forEach(r=>t+=[r.d,r.s,r.e,r.b,h(r.w),h(r.nt),r.cs||'',r.ce||'',r.k,(r.n||'').replace(/[\n;]/g,' ')].join(';')+'\n');
  try{await navigator.clipboard.writeText(t);alert('Copiado.')}catch(e){prompt('Copia este texto:',t)}};
 $('dall').onclick=()=>{if(E.length&&confirm('¿Borrar TODOS los turnos? No se puede deshacer.')){E=[];sv();$('dm').innerHTML='';render()}};
@@ -342,7 +369,7 @@ async function makePDF(m,q){
  y=doc.lastAutoTable.finalY+14;
  doc.autoTable({startY:y,theme:'grid',styles:{fontSize:7.5,font:'helvetica'},headStyles:{fillColor:[29,95,209]},head:[['Fecha','Real (mi registro)','Pausa','Horas','Noct.','Empresa (su registro)','Horas empresa','Diferencia','Km','Notas / avisos']],body:d.rows.map(r=>[r.d.slice(8)+'/'+r.d.slice(5,7)+'/'+r.d.slice(0,4),r.s+'-'+r.e,r.b+' min',h(r.w),r.nt?h(r.nt):'-',r.cs?r.cs+'-'+r.ce:'-',r.paid!==null?h(r.paid):'-',r.paid!==null?h(r.w-r.paid):'-',r.k,lat([r.n,r.al.join(', ')].filter(Boolean).join(' | '))])});
  y=doc.lastAutoTable.finalY+16;
- if(window._rep&&(window._rep.m===m||!m)&&window._rep.t){line('INFORME DE LA IA ('+window._rep.m.slice(5)+'/'+window._rep.m.slice(0,4)+')',12,1);window._rep.t.split('\n').forEach(l=>line(l||' ',9))}
+ const RP=repFor(m);if(RP){line('INFORME DE LA IA ('+RP.m.slice(5)+'/'+RP.m.slice(0,4)+')',12,1);RP.t.split('\n').forEach(l=>line(l||' ',9))}
  else line('Informe de la IA: no generado para este periodo.',9);
  y+=8;line('Las horas y coordenadas de entrada y salida marcadas con GPS se registraron en el momento de pulsar iniciar y finalizar turno, con la hora y la ubicacion del movil del trabajador. Las fotos y videos de la aplicacion de fichaje de la empresa se conservan como prueba (columna Pruebas).',8);y+=4;line('Documento orientativo elaborado con registros propios del trabajador (incluidas capturas de la aplicacion de fichaje de la empresa). No es asesoramiento juridico: revisar con un sindicato o abogado laboralista.',8);
  if(q)return doc.output('blob');
@@ -351,8 +378,11 @@ async function makeTXT(m){
  const d=repData(m);if(!d.rows.length){alert('No hay turnos en ese periodo.');return}
  let t='REGISTRO DE JORNADA - '+d.label+'\n'+contractLines().join('\n')+'\n\nRESUMEN\nDias: '+d.t.d+' | Horas: '+h(d.t.w)+' | Extra: '+h(d.t.ex)+' | Nocturnas: '+h(d.t.nt)+' | Km: '+d.t.km+(d.t.hp?' | No reconocidas: '+h(d.t.un):'')+(D.mo?'\nEstimado: extras '+eur(d.t.eE)+' + nocturnidad '+eur(d.t.eN)+' = '+eur(d.t.eE+d.t.eN):'')+'\n\nTURNOS\n';
  d.rows.forEach(r=>t+=[r.d,'real '+r.s+'-'+r.e,'pausa '+r.b+'min',h(r.w),'noct '+h(r.nt),'empresa '+(r.cs?r.cs+'-'+r.ce:'-'),r.paid!==null?'dif '+h(r.w-r.paid):'','km '+r.k,r.n||''].join(' | ')+'\n');
- if(window._rep&&(window._rep.m===m||!m))t+='\nINFORME IA\n'+window._rep.t+'\n';
+ const RP=repFor(m);if(RP)t+='\nINFORME IA\n'+RP.t+'\n';
  await deliver(new Blob([t],{type:'text/plain'}),'informe-jornada-'+(m||'completo')+'.txt')}
+function repFor(m){const R=S.reps||{};if(m)return R[m]?{m,t:R[m].t}:null;const k=Object.keys(R).sort((a,b)=>R[b].ts-R[a].ts)[0];return k?{m:k,t:R[k].t}:null}
+const showRep=()=>{const r=(S.reps||{})[$('rm').value],o=$('rep');if(r){o.hidden=false;o.textContent=r.t}else{o.hidden=true;o.textContent=''}};
+$('rm').onchange=showRep;
 $('pr').onclick=()=>makePDF('');
 $('pm').onclick=()=>makePDF($('rm').value);
 $('tm').onclick=()=>makeTXT($('rm').value);
@@ -398,16 +428,22 @@ async function fillPlaces(){const ms=[];E.forEach(x=>[x.ls,x.le].forEach(m=>{if(
 window.addEventListener('online',fillPlaces);
 
 /* ---------- pruebas (IndexedDB) + Google Drive ---------- */
-const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('rj',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+let _db=null;
+const idb=()=>_db||(_db=new Promise((res,rej)=>{const r=indexedDB.open('rj',1);r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>res(r.result);r.onerror=()=>{_db=null;rej(r.error)}}));
 const idbPut=async(k,v)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})};
 const idbGet=async k=>{const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('f').objectStore('f').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})};
 const idbDel=async k=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error)})};
-try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+let PERS=null;
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().then(p=>{PERS=p;warnUI()}).catch(()=>{})}catch(e){}
 $('evd').value=todayS();
 function renderEv(){const L=(S.ev||[]).slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.ts-a.ts);
  $('evl').innerHTML=L.length?L.map(m=>`<div style="border-top:1px solid var(--bd);padding:6px 0"><b>${fd(m.d)}</b> · ${esc(m.name)} <span class="m">(${(m.size/1048576).toFixed(1)} MB${m.hh?' · sha256 '+m.hh.slice(0,10):''})</span><br>${m.drive?'<span class="ok">✅ En Drive</span> <a href="'+esc(m.drive.link||'#')+'" target="_blank" rel="noopener">ver</a>':'<span class="bad">⏳ Solo en este móvil</span>'} <button class="s" onclick="evShare(\''+m.id+'\')">Compartir / guardar</button><button class="x" onclick="evDel(\''+m.id+'\')">🗑</button></div>`).join(''):'<span class="m">Aún no hay pruebas.</span>';
- const p=(S.ev||[]).filter(m=>!m.drive).length;$('evp').hidden=!p||!S.gcid;$('evp').textContent='☁️ Subir '+p+' pendiente(s) a Drive'}
-window.evShare=async id=>{const m=S.ev.find(x=>x.id===id);const b=await idbGet(id);if(!b){alert('Archivo no encontrado en este móvil.');return}deliver(b,m.name)};
+ const p=(S.ev||[]).concat(S.docs||[]).filter(m=>!m.drive).length;$('evp').hidden=!p||!S.gcid;$('evp').textContent='☁️ Subir '+p+' pendiente(s) a Drive'}
+async function getBlob(m){let b=await idbGet(m.id).catch(()=>null);if(b)return b;if(!(m.drive&&m.drive.id))return null;
+ const t=await token(),r=await fetch('https://www.googleapis.com/drive/v3/files/'+m.drive.id+'?alt=media',{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw await gerr(r);
+ b=new File([await r.blob()],m.name,{type:m.type||'application/octet-stream'});idbPut(m.id,b).catch(()=>{});return b}
+window.evShare=async id=>{const m=(S.ev||[]).concat(S.docs||[]).find(x=>x.id===id);if(!m)return;
+ try{const b=await getBlob(m);if(!b){alert('Este archivo no está en este móvil ni en Drive.');return}deliver(b,m.name)}catch(e){alert('No se pudo bajar de Drive: '+e.message)}};
 window.evDel=async id=>{const m=S.ev.find(x=>x.id===id);if(!m||!confirm('¿Borrar «'+m.name+'» de este móvil?'+(m.drive?' La copia de Drive no se borra.':' Aún NO está en Drive.')))return;
  await idbDel(id).catch(()=>{});S.ev=S.ev.filter(x=>x.id!==id);sv();render()};
 $('evf').onchange=async()=>{const d=$('evd').value||todayS(),fs=[...$('evf').files];$('evf').value='';
@@ -421,7 +457,9 @@ const loadGIS=()=>new Promise((res,rej)=>{if(window.google&&google.accounts&&goo
 function loadTok(){try{const o=JSON.parse(localStorage.getItem('rj_tok')||'null');if(o&&o.t&&Date.now()<o.e){TOK=o.t;TEXP=o.e}}catch(e){}}
 function clearTok(){TOK=null;TEXP=0;try{localStorage.removeItem('rj_tok')}catch(e){}}
 function hasTok(){if(!(TOK&&Date.now()<TEXP))loadTok();return !!(TOK&&Date.now()<TEXP)}
-function token(){if(hasTok())return Promise.resolve(TOK);if(!S.gcid)return Promise.reject(new Error('Falta el Client ID de Google (☁️ arriba).'));
+let TP=null;
+function token(){if(hasTok())return Promise.resolve(TOK);if(TP)return TP;TP=token0().finally(()=>{TP=null});return TP}
+function token0(){if(!S.gcid)return Promise.reject(new Error('Falta el Client ID de Google (☁️ arriba).'));
  return loadGIS().then(()=>new Promise((res,rej)=>{const c=google.accounts.oauth2.initTokenClient({client_id:S.gcid,scope:'https://www.googleapis.com/auth/drive.file',
   hint:S.gem||undefined,
   callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));TOK=r.access_token;TEXP=Date.now()+(r.expires_in-60)*1000;S.gok=1;sv();try{localStorage.setItem('rj_tok',JSON.stringify({t:TOK,e:TEXP}))}catch(e){}
@@ -436,21 +474,90 @@ async function fid(t){if(S.dfid)return S.dfid;const H={Authorization:'Bearer '+t
  if(j.files&&j.files[0])S.dfid=j.files[0].id;else{r=await fetch('https://www.googleapis.com/drive/v3/files?fields=id',{method:'POST',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify({name:'Registro jornada',mimeType:'application/vnd.google-apps.folder'})});if(!r.ok)throw await gerr(r);S.dfid=(await r.json()).id}
  sv();return S.dfid}
 async function drUp(t,m){const b=await idbGet(m.id);if(!b)throw new Error('«'+m.name+'» ya no está en este móvil.');const f=await fid(t);
- const hm=new Date(m.ts).toTimeString().slice(0,5).replace(':','');const name=m.d+'_'+hm+'_'+m.name.replace(/[^\w.\-]+/g,'_');const ty=b.type||m.type||'application/octet-stream';
- const i=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':ty},body:JSON.stringify({name,parents:[f],description:'Prueba de fichaje del '+m.d+(m.hh?' · sha256 '+m.hh:'')})});
+ const hm=new Date(m.ts).toTimeString().slice(0,5).replace(':','');const name=(m.doc?'contrato-nomina_'+new Date(m.ts).toISOString().slice(0,10):m.d)+'_'+hm+'_'+m.name.replace(/[^\w.\-]+/g,'_');const ty=b.type||m.type||'application/octet-stream';
+ const i=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,webViewLink',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':ty},body:JSON.stringify({name,parents:[f],description:(m.doc?'Contrato o nómina':'Prueba de fichaje del '+m.d)+(m.hh?' · sha256 '+m.hh:'')})});
  if(i.status===404){S.dfid='';sv()}if(!i.ok)throw await gerr(i);const loc=i.headers.get('Location');if(!loc)throw new Error('Drive no devolvió la dirección de subida.');
  const u=await fetch(loc,{method:'PUT',headers:{'Content-Type':ty},body:b});if(!u.ok)throw await gerr(u);const j=await u.json();m.drive={id:j.id,link:j.webViewLink||''}}
-async function syncEv(){if(syncing||!S.gcid)return;const P=S.ev.filter(m=>!m.drive);if(!P.length)return;syncing=true;const st=$('evs');
- try{const t=await token();for(const m of P){st.textContent='Subiendo '+m.name+'…';await drUp(t,m);sv();renderEv()}st.innerHTML='<span class="ok">✅ Todo subido a Drive.</span>'}
+async function syncEv(){if(syncing||!S.gcid)return;const P=(S.ev||[]).concat(S.docs||[]).filter(m=>!m.drive);if(!P.length)return;syncing=true;const st=$('evs');
+ try{const t=await token();for(const m of P){st.textContent='Subiendo '+m.name+'…';await drUp(t,m);sv();renderEv();showFL()}st.innerHTML='<span class="ok">✅ Todo subido a Drive.</span>'}
  catch(e){st.innerHTML='<span class="bad">No se pudo subir: '+esc(e.message)+'</span> Toca «Subir pendientes» para reintentar.'}
  syncing=false}
 $('evp').onclick=syncEv;
 const driveUI=()=>{$('gc').value=S.gcid||'';$('gst').innerHTML=!S.gcid?'Sin configurar.':S.gok?'<span class="ok">✅ Conectado.</span>':'Client ID guardado. Toca «Guardar y conectar».'};
 $('gcs').onclick=async()=>{const v=$('gc').value.trim();if(!/\.apps\.googleusercontent\.com$/.test(v)){$('gst').innerHTML='<span class="bad">El Client ID debe acabar en .apps.googleusercontent.com</span>';return}
  S.gcid=v;S.gok=0;S.dfid='';S.gem='';clearTok();sv();$('gst').textContent='Conectando…';
- try{const t=await token();await fid(t);driveUI();$('gst').innerHTML+=' Carpeta «Registro jornada» lista.';renderEv();syncEv()}catch(e){$('gst').innerHTML='<span class="bad">'+esc(e.message)+'</span>'}};
-$('gcd').onclick=()=>{S.gcid='';S.gok=0;S.dfid='';S.gem='';clearTok();sv();driveUI();renderEv()};
-driveUI();liveUI();fillPlaces();
+ try{const t=await token();await fid(t);driveUI();$('gst').innerHTML+=' Carpeta «Registro jornada» lista.';renderEv();warnUI();
+  const got=await driveRestore(true);if(!got){syncEv();flushBackup(true);showFL()}}catch(e){$('gst').innerHTML='<span class="bad">'+esc(e.message)+'</span>'}};
+$('gcd').onclick=()=>{S.gcid='';S.gok=0;S.dfid='';S.gem='';clearTok();sv();driveUI();renderEv();warnUI()};
+
+/* ---------- copia automática de turnos y datos en Drive ---------- */
+const BKN='copia-registro-jornada';
+const bkGet=()=>{try{return JSON.parse(localStorage.getItem('rj_bk')||'{}')||{}}catch(e){return {}}};
+const bkSet=o=>{try{localStorage.setItem('rj_bk',JSON.stringify(o))}catch(e){}};
+const hsh=s=>{let x=5381;for(let i=0;i<s.length;i++)x=(x*33^s.charCodeAt(i))>>>0;return s.length+'-'+x.toString(36)};
+const dataSig=()=>hsh(JSON.stringify({S:{...S,dfid:0,gok:0,gem:0},E}));
+function afterSave(){flushBackup(false);warnUI()}
+async function drJSON(t,txt,id,name){const H={Authorization:'Bearer '+t};
+ if(id){const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media&fields=id',{method:'PATCH',headers:{...H,'Content-Type':'application/json'},body:txt});
+  if(r.ok)return (await r.json()).id;if(r.status!==404)throw await gerr(r)}
+ const f=await fid(t),b='rjb'+Date.now();
+ const body='--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify({name,parents:[f],mimeType:'application/json',description:'Copia automática de Jornadas reales'})+'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+txt+'\r\n--'+b+'--';
+ const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{...H,'Content-Type':'multipart/related; boundary='+b},body});
+ if(r.status===404){S.dfid='';sv()}if(!r.ok)throw await gerr(r);return (await r.json()).id}
+let bkBusy=false,bkAgain=false,bkErr='';
+async function flushBackup(gesture){
+ if(!S.gcid||!S.gok||!hasData()){bkUI();return}           /* nunca sube una copia vacía encima de una buena */
+ const sig=dataSig();let bk=bkGet();if(bk.sig===sig){bkUI();return}
+ if(!hasTok()&&!gesture){bkUI();return}
+ if(bkBusy){bkAgain=true;return}bkBusy=true;
+ try{const t=await token();
+  if(!bk.sig&&!bk.chk){bkBusy=false;if(await driveRestore(true))return;bkBusy=true;bk=bkGet()}  /* primera vez en este navegador: antes de subir, mira si Drive tiene algo que aquí falta */
+  const txt=JSON.stringify({v:2,ts:Date.now(),S,E,K:getK()});
+  if(!bk.id){const f=await fid(t),q=encodeURIComponent("name='"+BKN+".json' and '"+f+"' in parents and trashed=false");
+   const r=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)',{headers:{Authorization:'Bearer '+t}});if(r.ok){const x=(await r.json()).files||[];if(x[0])bk.id=x[0].id}}
+  bk.id=await drJSON(t,txt,bk.id,BKN+'.json');
+  const day=todayS();if(bk.day!==day){await drJSON(t,txt,null,BKN+'-'+day+'.json');bk.day=day}
+  bk.sig=sig;bk.ts=Date.now();bkSet(bk);bkErr=''}
+ catch(e){bkErr=e.message}
+ bkBusy=false;bkUI();warnUI();if(bkAgain){bkAgain=false;flushBackup(false)}}
+async function driveRestore(auto){const st=$('bks');
+ try{const t=await token(),f=await fid(t),H={Authorization:'Bearer '+t};
+  const q=encodeURIComponent("name contains '"+BKN+"' and '"+f+"' in parents and trashed=false");
+  let r=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&orderBy=modifiedTime%20desc&pageSize=10&fields=files(id,name,modifiedTime)',{headers:H});if(!r.ok)throw await gerr(r);
+  const fs=(await r.json()).files||[];if(!fs.length){const b=bkGet();b.chk=Date.now();bkSet(b);if(!auto)st.innerHTML='<span class="bad">No hay ninguna copia en tu Drive todavía.</span>';return false}
+  r=await fetch('https://www.googleapis.com/drive/v3/files/'+fs[0].id+'?alt=media',{headers:H});if(!r.ok)throw await gerr(r);
+  const j=await r.json(),pv=mergeIn(j,true),mark=()=>{const b=bkGet();b.chk=Date.now();bkSet(b)};
+  if(!pv.any){mark();if(!auto)st.innerHTML='<span class="ok">Ya tienes en este móvil todo lo que hay en la copia de Drive.</span>';return false}
+  const fe=new Date(fs[0].modifiedTime).toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'});
+  if(!confirm('He encontrado en tu Drive una copia del '+fe+'. Te falta aquí: '+pv.n+' turnos, '+pv.f+' datos personales y del contrato'+(pv.a?' y '+pv.a+' documentos, pruebas o informes':'')+'. ¿Recuperarlo? No se borra nada.')){mark();return false}
+  const r2=mergeIn(j);mark();const mf=fs.find(x=>x.name===BKN+'.json');if(mf){const b=bkGet();b.id=mf.id;bkSet(b)}sv();alert(rmsg(r2));location.reload();return true}
+
+ catch(e){if(!auto)st.innerHTML='<span class="bad">No se pudo recuperar: '+esc(e.message)+'</span>';return false}}
+$('drr').onclick=()=>{if(!S.gcid){$('bks').innerHTML='<span class="bad">Primero conecta Google Drive (☁️ más arriba) con la misma cuenta de antes.</span>';return}driveRestore(false)};
+const ago=ts=>{const m=Math.round((Date.now()-ts)/60000);return m<1?'ahora mismo':m<60?'hace '+m+' min':m<2880?'hace '+Math.round(m/60)+' h':'hace '+Math.round(m/1440)+' días'};
+function bkUI(){const b=bkGet(),el=$('bks');if(!el)return;
+ if(!S.gcid||!S.gok){el.innerHTML='Copia automática en Drive: <b class="bad">desactivada</b>. Conecta Google Drive (☁️) para activarla.';return}
+ const pend=hasData()&&b.sig!==dataSig();
+ el.innerHTML='Copia automática en Drive: '+(b.ts?'última <b>'+ago(b.ts)+'</b>':'<b>aún ninguna</b>')+(pend?' · <span class="bad">hay cambios sin subir'+(hasTok()?'':' (toca cualquier botón para conectar con Google)')+'</span>':' · <span class="ok">al día</span>')+(bkErr?'<br><span class="bad">Error: '+esc(bkErr)+'</span>':'')}
+const inApp=/; wv\)|FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok|Snapchat/i.test(navigator.userAgent);
+function warnUI(){const el=$('warn');if(!el)return;const L=[],b=bkGet();
+ if(location.protocol==='file:')L.push('Estás abriendo el archivo directamente desde el móvil. Ahí los datos se pueden perder: abre la app con su dirección web.');
+ if(inApp)L.push('Estás abriendo la app <b>dentro de otra app</b> (Instagram, Facebook…). Lo que apuntes aquí se puede borrar. Abre el enlace en Chrome: menú ⋮ → «Abrir en Chrome».');
+ if(hasData()&&(!S.gcid||!S.gok))L.push('Tus turnos y tus datos solo están en este móvil. Si el navegador borra sus datos, se pierden. <b>Conecta Google Drive (☁️)</b> para que se guarde una copia sola'+(b.dl?'.':', o descarga una copia (apartado 6).'));
+ else if(hasData()&&b.ts&&Date.now()-b.ts>3*864e5&&b.sig!==dataSig())L.push('La última copia en Drive es de '+ago(b.ts)+'. Toca cualquier botón para conectar con Google y subirla.');
+ if(PERS===false&&!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)))L.push('Instala la app en el móvil para que el navegador no borre sus datos: menú ⋮ de Chrome → «Añadir a pantalla de inicio» o «Instalar app». Ábrela siempre desde ese icono.');
+ el.innerHTML=L.length?'<div class="c" style="border:2px solid var(--bad)"><b class="bad">⚠️ Cuidado con tus datos</b>'+L.map(x=>'<div style="margin-top:6px">'+x+'</div>').join('')+'</div>':''}
+/* primera pulsación de la sesión: si hay cambios sin subir, conecta con Google y sube */
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='gcs')return;if(S.gcid&&S.gok&&hasData()&&!hasTok()&&bkGet().sig!==dataSig())flushBackup(true)},{once:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){clearTimeout(SVT);afterSave()}});
+/* si el navegador vació el almacenamiento principal pero queda la copia interna, recupérala */
+(async()=>{if(hasData())return;try{if(sessionStorage.getItem('rj_rec'))return;sessionStorage.setItem('rj_rec','1')}catch(e){return}try{const m=await idbGet('data');if(!m)return;const pv=mergeIn(m,true);if(!(pv.n||pv.f||pv.a))return;const r=mergeIn(m);sv();
+ if((localStorage.getItem('rj_s')||'').length>2){alert(rmsg(r)+' (copia interna del móvil)');location.reload()}}catch(e){}})();
+/* volver a mostrar lo que la IA ya respondió */
+if(S.crt&&S.crt.h)$('cst').innerHTML='<div class="m">Última lectura ('+new Date(S.crt.ts).toLocaleDateString('es-ES')+'):</div>'+S.crt.h;
+if(S.srt&&S.srt.h)$('sres').innerHTML='<div class="m">Última búsqueda ('+new Date(S.srt.ts).toLocaleDateString('es-ES')+'):</div>'+S.srt.h;
+showFL();showRep();
+driveUI();liveUI();fillPlaces();bkUI();warnUI();flushBackup(false);
 
 render();
 
